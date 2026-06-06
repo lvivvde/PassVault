@@ -129,7 +129,7 @@ async function saveEditModal() {
     visible: document.getElementById('edit-visible').checked
   };
 
-  if (!entry.website || !entry.password) { showToast('Website and password are required'); return; }
+  if (!entry.website || !entry.password) { showToast('网站和密码为必填项'); return; }
 
   if (editingId) {
     await window.api.updateEntry(entry);

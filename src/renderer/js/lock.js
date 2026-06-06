@@ -153,7 +153,7 @@ function setupCopyKeyBtn() {
   const btn = document.getElementById('setup-copy-key');
   btn.onclick = () => {
     window.api.copyToClipboard(recoveryKey, 0);
-    showToast('Key copied!');
+    showToast('密钥已复制');
   };
 }
 
@@ -168,7 +168,7 @@ async function setupStep2Next() {
   }
 
   if (!document.getElementById('setup-key-saved').checked) {
-    errorEl.textContent = 'Please confirm you saved the key';
+    errorEl.textContent = '请确认已保存密钥';
     return;
   }
 
@@ -183,7 +183,7 @@ async function generateAndDisplayKey() {
   document.getElementById('setup-key-value').textContent = rawKey;
   document.getElementById('setup-copy-key').addEventListener('click', () => {
     window.api.copyToClipboard(rawKey, 0);
-    showToast('Key copied!');
+    showToast('密钥已复制');
   });
   return rawKey;
 }

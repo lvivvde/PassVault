@@ -30,6 +30,9 @@ async function fetchState() {
 }
 
 async function initApp() {
+  currentLang = 'zh-CN';
+  setLanguage(currentLang);
+
   await fetchState();
 
   const logoPath = await window.api.getAppPath();
@@ -37,8 +40,6 @@ async function initApp() {
   logo.src = `file://${logoPath}/icon/logo.png`;
 
   const settings = await window.api.getSettings();
-  currentLang = settings.language || 'zh-CN';
-  setLanguage(currentLang);
   if (settings.theme) {
     document.body.classList.remove('theme-dark', 'theme-light');
     document.body.classList.add('theme-' + settings.theme);
@@ -67,17 +68,17 @@ function showCloseDialog() {
   overlay.style.display = 'flex';
   overlay.innerHTML = `
     <div class="modal modal-small">
-      <h3>Close PassVault</h3>
+      <h3>关闭 PassVault</h3>
       <div style="margin:12px 0;display:flex;flex-direction:column;gap:8px;">
-        <label><input type="radio" name="closeOption" value="tray"> Minimize to tray</label>
-        <label><input type="radio" name="closeOption" value="quit"> Quit</label>
+        <label><input type="radio" name="closeOption" value="tray"> 最小化到系统托盘</label>
+        <label><input type="radio" name="closeOption" value="quit"> 直接退出</label>
       </div>
       <label style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;">
-        <input type="checkbox" id="remember-close"> Remember choice
+        <input type="checkbox" id="remember-close"> 记住我的选择
       </label>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
-        <button class="btn" onclick="document.getElementById('delete-confirm-overlay').style.display='none'">Cancel</button>
-        <button class="btn btn-primary" id="close-confirm-btn">Confirm</button>
+        <button class="btn" onclick="document.getElementById('delete-confirm-overlay').style.display='none'">取消</button>
+        <button class="btn btn-primary" id="close-confirm-btn">确定</button>
       </div>
     </div>`;
 
