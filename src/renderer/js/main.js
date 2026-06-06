@@ -69,13 +69,13 @@ async function initMainPage() {
     if (!cmp.ok) {
       icon.className = 'sync-status-icon unsaved';
       icon.textContent = '✕';
-      showToast(cmp.reason || '同步失败');
+      showToast(cmp.reason || t('sync.pushFail'));
       return;
     }
     if (!cmp.hasDiff) {
       icon.className = 'sync-status-icon synced';
       icon.textContent = '●';
-      showToast('本地与云端一致，无需同步');
+      showToast(t('sync.sameContent'));
       return;
     }
     showSyncDiffDialog(cmp);
@@ -164,7 +164,7 @@ async function initMainPage() {
       const global = document.getElementById('search-global').checked;
       renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
       renderMainSidebar();
-      showToast('排序已更新');
+      showToast(t('settings.sortToast'));
     }
     dragId = null;
   });
@@ -270,7 +270,7 @@ async function showSyncDiffDialog(cmp) {
     if (r.success) {
       document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
       document.getElementById('sync-status-icon').textContent = '●';
-      showToast('已同步到云端');
+      showToast(t('sync.pushOk'));
     } else {
       showToast('同步失败: ' + (r.message || ''));
     }
@@ -286,7 +286,7 @@ async function showSyncDiffDialog(cmp) {
     const r = await window.api.syncResolveDownload();
     overlay.style.display = 'none';
     if (r.success) {
-      showToast('已从云端下载');
+      showToast(t('sync.pullOk'));
       await refreshAfterSync();
     } else {
       showToast('下载失败: ' + (r.message || ''));
@@ -297,7 +297,7 @@ async function showSyncDiffDialog(cmp) {
   if (cmp.action === 'none') {
     document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
     document.getElementById('sync-status-icon').textContent = '●';
-    showToast(cmp.reason || '本地与云端一致');
+    showToast(cmp.reason || t('sync.sameContent'));
     return;
   }
 
@@ -310,13 +310,13 @@ async function showSyncDiffDialog(cmp) {
       <button class="btn btn-small" id="sync-cancel">取消同步</button>`;
   } else if (cmp.type === 'different_vault') {
     title = '密码库不匹配';
-    body = '本地和云端属于不同的密码库，不能自动合并。';
+    body = t('sync.differentVault');
     buttons = `
       <button class="btn" id="sync-push-local">⬆ 使用本地覆盖云端</button>
       <button class="btn" id="sync-pull-remote">⬇ 备份本地后用云端覆盖</button>
       <button class="btn btn-small" id="sync-cancel">取消</button>`;
   } else if (cmp.type === 'mass_delete') {
-    title = '⚠️ 大量删除警告';
+    title = t('sync.massDelete');
     body = `云端 ${cmp.remoteCount} 条，本地 ${cmp.localCount} 条（减少 ${cmp.deleted} 条）。为避免误删同步到云端，请确认。`;
     buttons = `
       <button class="btn btn-danger" id="sync-push-local">确认删除，覆盖云端</button>
@@ -349,7 +349,7 @@ async function showSyncDiffDialog(cmp) {
     if (r.success) {
       document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
       document.getElementById('sync-status-icon').textContent = '●';
-      showToast('已上传到云端');
+      showToast(t('sync.uploadLabel'));
     } else { showToast('上传失败: ' + (r.message || '')); }
   });
 
@@ -357,7 +357,7 @@ async function showSyncDiffDialog(cmp) {
     overlay.style.display = 'none';
     const r = await window.api.syncResolveDownload();
     if (r.success) {
-      showToast('已下载云端版本');
+      showToast(t('sync.pullLabel'));
       await refreshAfterSync();
     } else { showToast('下载失败: ' + (r.message || '')); }
   });
@@ -439,10 +439,10 @@ async function showEditModal(id = null) {
   function updateVaultLabel() {
     const checked = menu.querySelectorAll('input:checked');
     if (!checked.length) {
-      label.textContent = '请至少选择一个';
+      label.textContent = t('edit.selectVault');
       label.style.color = 'var(--danger)';
     } else if (checked.length === mainState.vaults.length) {
-      label.textContent = '全部密码库';
+      label.textContent = t('edit.allVaults');
       label.style.color = '';
     } else if (checked.length === 1) {
       label.textContent = checked[0].nextElementSibling.textContent;
@@ -508,7 +508,7 @@ async function showEditModal(id = null) {
       const target = document.getElementById(btn.dataset.target);
       if (target && target.value) {
         await window.api.copyToClipboard(target.value, 1);
-        showToast('已复制');
+        showToast(t('main.copyToast'));
       }
     };
   });
@@ -540,10 +540,10 @@ async function saveEditModal() {
   };
 
   if (!entry.website || !entry.account || !entry.password) {
-    showToast('网站、账号和密码为必填项');
+    showToast(t('edit.required'));
     return;
   }
-  if (!entry.vaultIds.length) { showToast('至少选择一个密码库'); return; }
+  if (!entry.vaultIds.length) { showToast(t('edit.vaultRequired')); return; }
 
   if (editingId) {
     await window.api.updateEntry(entry);
@@ -653,7 +653,7 @@ function showPasswordGenerator() {
   document.getElementById('gen-confirm').addEventListener('click', () => {
     document.getElementById('edit-password').value = document.getElementById('gen-result').textContent;
     overlay.style.display = 'none';
-    showToast('密码已生成');
+    showToast(t('gen.generated'));
   });
   render();
 }
