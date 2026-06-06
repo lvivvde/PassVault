@@ -30,7 +30,6 @@ function createWindow() {
   });
 
   // restore zoom factor
-  const settings = require('./src/main/settings');
   try {
     const zf = settings.get('zoomFactor') || 1;
     mainWindow.webContents.setZoomFactor(zf);

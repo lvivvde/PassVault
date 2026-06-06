@@ -80,7 +80,7 @@ function switchPanel(cat) {
   bindPanelEvents(cat);
 }
 
-function bindPanelEvents(cat) {
+async function bindPanelEvents(cat) {
   if (cat === 'general') {
     document.getElementById('setting-language').value = settingsCache.language || 'zh-CN';
     document.getElementById('setting-theme').value = settingsCache.theme || 'dark';
