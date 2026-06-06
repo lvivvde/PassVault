@@ -30,8 +30,7 @@ async function fetchState() {
 }
 
 async function initApp() {
-  currentLang = 'zh-CN';
-  setLanguage(currentLang);
+  initLanguage('zh-CN');
 
   await fetchState();
 
