@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.exe
+*.msi
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Password vault files (never commit!)
+*.pvault
+*.pvault.bak
+*.pvault.tmp
+
+# Test data
+test/data/*.pvault
