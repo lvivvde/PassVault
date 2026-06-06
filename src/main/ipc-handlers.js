@@ -321,7 +321,7 @@ function setupAppHandlers() {
 
 function setupSyncHandlers() {
   ipcMain.handle('sync:test', async (_, url, username, password) => {
-    return sync.testConnection(url, username, password);
+    return sync.testConnection({ mode: 'webdav', url, username, password });
   });
 
   ipcMain.handle('sync:push', async () => {
