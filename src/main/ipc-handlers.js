@@ -217,6 +217,8 @@ function setupAppHandlers() {
   ipcMain.handle('log:get-dir', async () => logger.getLogDir());
   ipcMain.handle('log:open-dir', async () => { const { shell } = require('electron'); shell.openPath(logger.getLogDir()); return { success: true }; });
 }
+
+function setupSyncHandlers() {
   // restore saved sync config on startup
   const savedCfg = settings.get('syncConfig') || {};
   if (savedCfg.mode && savedCfg.mode !== 'none') {
