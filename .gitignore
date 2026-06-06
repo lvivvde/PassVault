@@ -30,3 +30,5 @@ logs/
 
 # Test data
 test/data/*.pvault
+*.pvault
+*.bak
