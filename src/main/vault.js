@@ -22,6 +22,12 @@ class VaultService {
   }
 
   get state() {
+    // check settings for storage path on cold start
+    if (!this.vaultPath) {
+      const { get: sget } = require('./settings');
+      const p = sget('storagePath');
+      if (p && require('fs').existsSync(p)) this.vaultPath = p;
+    }
     if (!this.isUnlocked) return { status: 'locked', hasVault: !!this.vaultPath };
     return {
       status: 'unlocked',
