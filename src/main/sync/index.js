@@ -99,7 +99,8 @@ async function compare(localMeta, vaultPath, remoteDecrypt) {
         localVersion: lv, remoteVersion: rv };
     }
     // 9.2 Conflict: both modified
-    return { action: 'conflict', reason: '双方都修改过', type: 'both_modified',
+    return { action: 'conflict', reason: '本地和云端都发生过修改',
+      type: 'both_modified',
       localVersion: lv, remoteVersion: rv, lastSyncVersion: lSync };
   }
 

@@ -323,8 +323,8 @@ async function showSyncDiffDialog(cmp) {
       <button class="btn" id="sync-pull-remote">从云端恢复数据</button>
       <button class="btn btn-small" id="sync-cancel">取消</button>`;
   } else {
-    title = '本地与云端不一致';
-    body = `本地 v${cmp.localVersion || '?'} | 云端 v${cmp.remoteVersion || '?'} | ${cmp.type === 'both_modified' ? '双方都修改过' : cmp.reason}`;
+    title = '本地与云端数据不一致';
+    body = `本地版本 ${cmp.localVersion || '?'}，云端版本 ${cmp.remoteVersion || '?'}<br><span style="font-size:11px;color:var(--text-muted)">${cmp.type === 'both_modified' ? '本地和云端各有修改，无法自动判断方向' : cmp.type === 'hash_mismatch' ? '版本号相同但内容不同，可能是多设备冲突' : cmp.reason}</span>`;
     buttons = `
       <button class="btn" id="sync-push-local">⬆ 以本地为准覆盖云端</button>
       <button class="btn" id="sync-pull-remote">⬇ 以云端为准覆盖本地</button>

@@ -231,9 +231,9 @@ function setupSyncHandlers() {
     try {
       const vaultPath = settings.get('storagePath');
       if (!vaultPath) throw new Error('未设置存储路径');
+      const preVersion = vault.state ? vault.state.version : 0;
       const result = await sync.pushVault(vaultPath);
-      const meta = vault.state;
-      if (meta && meta.version) { vault._meta.lastSyncVersion = meta.version; vault.save(); }
+      if (preVersion > 0) { vault._meta.lastSyncVersion = preVersion; vault.save(); }
       return result;
     } catch (e) { return { success: false, message: e.message }; }
   });
@@ -315,9 +315,9 @@ function setupSyncHandlers() {
     try {
       const vaultPath = settings.get('storagePath');
       if (!vaultPath) throw new Error('未设置存储路径');
+      const preVersion = vault.state ? vault.state.version : 0;
       const result = await sync.pushVault(vaultPath);
-      const meta = vault.state;
-      if (meta && meta.version) { vault._meta.lastSyncVersion = meta.version; vault.save(); }
+      if (preVersion > 0) { vault._meta.lastSyncVersion = preVersion; vault.save(); }
       return result;
     } catch (e) { return { success: false, message: e.message }; }
   });
