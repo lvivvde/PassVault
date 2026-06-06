@@ -16,6 +16,7 @@ function createWindow() {
     minHeight: 450,
     x: bounds.x,
     y: bounds.y,
+    backgroundColor: '#f5f0e8',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
