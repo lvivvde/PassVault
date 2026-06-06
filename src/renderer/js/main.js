@@ -1,5 +1,5 @@
 let mainState = null;
-let searchFields = { website: true, alias: true, account: true, password: false, visible: true };
+let searchFields = { website: true, alias: true, account: true, password: false, visible: false };
 let activeVaultFilter = null;
 
 async function initMainPage() {
