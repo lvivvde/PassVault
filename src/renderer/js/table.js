@@ -27,16 +27,15 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
 
   // column header row
   const headerRow = document.createElement('div');
-  headerRow.className = 'table-row table-header-row';
+  headerRow.className = 'table-header-row';
   const sortableFields = ['id', 'website', 'alias', 'account'];
   const labels = { id: t('table.id'), website: t('table.website'), alias: t('table.alias'), account: t('table.account'), password: t('table.passwordHint'), description: t('table.description') };
   const cells = sortableFields.map(f => {
-    const clsMap = { id: 'col-id', website: 'col-website', alias: 'col-alias', account: 'col-account', password: 'col-password-hdr', description: 'col-description' };
+    const clsMap = { id: 'col-id', website: 'col-website', alias: 'col-alias', account: 'col-account' };
     const arrow = sortField === f ? (sortAsc ? '▲' : '▼') : '';
-    if (f === 'password') return `<span class="col-password-hdr" data-sort="password">密码 <small>${arrow || '点击显示'}</small></span>`;
-    return `<span class="${clsMap[f]}" data-sort="${f}" style="cursor:pointer">${labels[f]} ${arrow}</span>`;
+    return `<span class="${clsMap[f]}" data-sort="${f}">${labels[f]} ${arrow}</span>`;
   });
-  headerRow.innerHTML = cells.join('') + '<span class="col-copy-hdr"></span><span class="col-copy-hdr"></span><span class="col-copy-hdr"></span><span class="col-drag"></span>';
+  headerRow.innerHTML = cells.join('') + '<span class="col-password-hdr" data-sort="password">密码 <small>点击显示</small></span><span class="col-description">' + labels.description + '</span><span class="col-actions"></span><span class="col-drag"></span>';
   container.appendChild(headerRow);
 
   // sort click handlers
@@ -71,10 +70,13 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
     if (!globalSearch && !vaultEntries.length) return;
     if (!globalSearch && !filtered.some(e => e.vaultIds.includes(vault.id))) return;
 
+    const group = document.createElement('div');
+    group.className = 'table-group';
+
     const header = document.createElement('div');
     header.className = 'section-header';
-    header.textContent = `── ${vault.name} ──`;
-    container.appendChild(header);
+    header.innerHTML = `<span class="vault-dot"></span><span class="group-name">${escapeHtml(vault.name)}</span><span class="group-count">${vaultEntries.length} 条</span>`;
+    group.appendChild(header);
 
     if (!vaultEntries.length && !globalSearch) {
       const empty = document.createElement('div');
@@ -83,14 +85,17 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
       empty.style.justifyContent = 'center';
       empty.textContent = t('main.noMatch');
       empty.style.fontSize = '12px';
-      container.appendChild(empty);
+      group.appendChild(empty);
+      container.appendChild(group);
       return;
     }
 
     vaultEntries.forEach(entry => {
       const row = createTableRow(entry, vaults);
-      container.appendChild(row);
+      group.appendChild(row);
     });
+
+    container.appendChild(group);
   });
 
   countEl.textContent = t('main.count', { n: filtered.length });
@@ -145,10 +150,10 @@ function createTableRow(entry, vaults) {
     <span class="col-website">${escapeHtml(ws)}<button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.website)}" data-no-clear="1" title="复制网址">📋</button></span>
     <span class="col-alias">${escapeHtml(as)}</span>
     <span class="col-account">${escapeHtml(ac)}<button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.account)}" data-no-clear="1" title="复制账号">📋</button></span>
-    <span class="col-password" data-pw="${escapeAttr(entry.password)}" title="${t('table.passwordTitle')}">****</span>
-    <button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.password)}" title="${t('table.copyHint')}">📝</button>
+    <span class="col-password" data-pw="${escapeAttr(entry.password)}" title="${t('table.passwordTitle')}">••••</span>
     <span class="col-description">${escapeHtml(entry.description || '-')}</span>
-    <span class="col-drag" title="${t('table.dragHint')}">≡</span>
+    <span class="col-actions"><button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.password)}" title="${t('table.copyHint')}">📝</button></span>
+    <span class="col-drag" title="${t('table.dragHint')}">⠿</span>
   `;
 
   row.querySelector('.col-password').addEventListener('click', async () => {
@@ -156,7 +161,7 @@ function createTableRow(entry, vaults) {
     const pwSpan = row.querySelector('.col-password');
     pwSpan.textContent = entry.password;
     if (revealSec > 0) {
-      setTimeout(() => { pwSpan.textContent = '****'; }, revealSec * 1000);
+      setTimeout(() => { pwSpan.textContent = '••••'; }, revealSec * 1000);
     }
   });
 

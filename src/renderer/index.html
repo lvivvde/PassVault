@@ -117,7 +117,7 @@
         <div class="sidebar-section-title">密码库</div>
         <div class="main-vault-list" id="main-vault-list"></div>
       </div>
-      <button class="settings-gear" id="main-settings-btn" title="设置">&#x2699;</button>
+      <button class="settings-gear" id="main-settings-btn" title="设置">&#x2699; 设置</button>
     </nav>
     <div class="main-content">
       <header class="main-header">
@@ -144,10 +144,11 @@
         </div>
       </div>
       <footer class="main-footer">
-        <span id="main-count">0 条记录</span>
+        <span class="footer-count" id="main-count">0 条记录</span>
         <div class="sync-status-area">
           <span class="sync-status-icon" id="sync-status-icon">○</span>
-          <button class="btn btn-tiny" id="main-sync-btn" title="立即同步">🔄 同步</button>
+          <span class="sync-time" id="sync-time"></span>
+          <button class="sync-btn" id="main-sync-btn" title="上传到云端">上传到云端</button>
         </div>
       </footer>
     </div>

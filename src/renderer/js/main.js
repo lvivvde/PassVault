@@ -65,26 +65,32 @@ async function initMainPage() {
   document.getElementById('main-sync-btn').addEventListener('click', async () => {
     const icon = document.getElementById('sync-status-icon');
     icon.textContent = '⟳';
-    const cmp = await window.api.syncCompare();
-    if (!cmp.ok) {
+    icon.className = 'sync-status-icon';
+    const cfg = await window.api.syncGetConfig();
+    if (!cfg || cfg.mode === 'none') {
       icon.className = 'sync-status-icon unsaved';
       icon.textContent = '✕';
-      showToast(t(cmp.reasonKey) || cmp.reason || t('sync.pushFail'));
+      showToast('请先在设置中配置同步');
       return;
     }
-    if (!cmp.hasDiff) {
+    const result = await window.api.syncPush();
+    if (result.success) {
+      setSyncTime();
       icon.className = 'sync-status-icon synced';
       icon.textContent = '●';
-      showToast(t('sync.sameContent'));
-      return;
+      showToast(t('sync.pushOk'));
+    } else {
+      icon.className = 'sync-status-icon unsaved';
+      icon.textContent = '✕';
+      showToast('上传失败: ' + (result.message || ''));
     }
-    showSyncDiffDialog(cmp);
   });
 
   window.api.onSyncStatus((status) => {
     if (status.type === 'synced') {
       syncIcon.className = 'sync-status-icon synced';
       syncIcon.textContent = '●';
+      setSyncTime();
     } else if (status.type === 'unsaved') {
       syncIcon.className = 'sync-status-icon unsaved';
       syncIcon.textContent = '✕';
@@ -177,13 +183,13 @@ function renderMainSidebar() {
   const vaults = mainState.vaults || [];
   const entries = mainState.entries || [];
 
-  list.innerHTML = '<div class="main-vault-item active" data-vault-id="all"><span class="vault-dot" style="background:var(--text-muted);"></span><span>全部</span><span class="vault-count-badge">' + entries.length + '</span></div>' +
+  list.innerHTML = '<div class="main-vault-item active" data-vault-id="all"><span class="vault-dot" style="background:var(--text-muted);"></span><span class="vault-name">全部</span><span class="vault-count-badge">' + entries.length + '</span></div>' +
     vaults.map(v => {
       const count = entries.filter(e => e.vaultIds && e.vaultIds.includes(v.id)).length;
       return `
         <div class="main-vault-item" data-vault-id="${v.id}">
           <span class="vault-dot"></span>
-          <span>${escHtml(v.name)}</span>
+          <span class="vault-name">${escHtml(v.name)}</span>
           <span class="vault-count-badge">${count}</span>
         </div>`;
     }).join('');
@@ -212,11 +218,34 @@ async function initSyncStatus() {
   if (!cfg || cfg.mode === 'none') {
     icon.textContent = '○';
     icon.className = 'sync-status-icon';
+    updateSyncTimeDisplay();
     return;
   }
   // configured but unknown sync state → unsaved until proven otherwise
   icon.className = 'sync-status-icon unsaved';
   icon.textContent = '✕';
+  updateSyncTimeDisplay();
+}
+
+function setSyncTime() {
+  const now = Date.now();
+  localStorage.setItem('passvault_lastSync', now);
+  updateSyncTimeDisplay();
+}
+
+function updateSyncTimeDisplay() {
+  const el = document.getElementById('sync-time');
+  if (!el) return;
+  const ts = localStorage.getItem('passvault_lastSync');
+  if (!ts) { el.textContent = ''; return; }
+  const diff = Date.now() - parseInt(ts);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) { el.textContent = '刚刚'; return; }
+  if (mins < 60) { el.textContent = mins + ' 分钟前'; return; }
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) { el.textContent = hrs + ' 小时前'; return; }
+  const days = Math.floor(hrs / 24);
+  el.textContent = days + ' 天前';
 }
 
 async function checkCloudUpdate() {

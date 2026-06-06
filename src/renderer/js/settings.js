@@ -1,31 +1,42 @@
 const panels = {
   general: `
     <h3>通用</h3>
-    <div class="setting-row"><label>语言</label><select id="setting-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></div>
-    <div class="setting-row"><label>主题</label><select id="setting-theme"><option value="dark">深色</option><option value="light">浅色</option></select></div>
-    <div class="setting-row"><label>界面缩放</label><select id="setting-zoom"><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.25">125%</option></select></div>
-    <div class="setting-row"><label>调试日志</label><input type="checkbox" id="setting-log"></div>`,
+    <p class="section-desc">语言、主题和界面基础设置</p>
+    <div class="settings-section">
+      <div class="setting-row"><label>语言</label><select id="setting-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></div>
+      <div class="setting-row"><label>主题</label><select id="setting-theme"><option value="light">浅色</option><option value="dark">深色</option></select></div>
+      <div class="setting-row"><label>界面缩放</label><select id="setting-zoom"><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.25">125%</option></select></div>
+      <div class="setting-row"><label>调试日志</label><input type="checkbox" id="setting-log"></div>
+    </div>`,
 
   security: `
     <h3>安全</h3>
-    <div class="setting-row"><label>修改主密码</label><button class="btn btn-small" id="setting-change-password">修改 →</button></div>
-    <div class="setting-row"><label>恢复密钥</label><span class="key-hint" id="setting-key-hint">--------</span></div>
-    <div class="setting-row"><label>重新生成密钥</label><button class="btn btn-small" id="setting-regenerate-key">重置 →</button></div>
-    <div class="setting-row"><label>自动锁屏</label><select id="setting-auto-lock"><option value="5">5 分钟</option><option value="15">15 分钟</option><option value="30" selected>30 分钟</option><option value="60">1 小时</option><option value="120">2 小时</option><option value="0">永不</option></select></div>
-    <div class="setting-row"><label>登录错误上限</label><select id="setting-login-limit"><option value="3">3次</option><option value="5" selected>5次</option><option value="7">7次</option><option value="11">11次</option><option value="99">自定义(最多99)</option></select></div>
-    <div class="setting-row"><label>密码明文显示时长</label><select id="setting-reveal-duration"><option value="3" selected>3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="30">30 秒</option><option value="0">永不隐藏</option></select></div>
-    <div class="setting-row"><label>剪切板自动清除</label><select id="setting-clipboard"><option value="1" selected>1 分钟</option><option value="3">3 分钟</option><option value="5">5 分钟</option><option value="0">不清除</option></select></div>`,
+    <p class="section-desc">密码、密钥、锁屏和剪切板安全设置</p>
+    <div class="settings-section">
+      <div class="setting-row"><label>修改主密码</label><button class="btn btn-small" id="setting-change-password">修改 →</button></div>
+      <div class="setting-row"><label>恢复密钥</label><span class="key-hint" id="setting-key-hint">--------</span></div>
+      <div class="setting-row"><label>重新生成密钥</label><button class="btn btn-small" id="setting-regenerate-key">重置 →</button></div>
+      <div class="setting-row"><label>自动锁屏</label><select id="setting-auto-lock"><option value="5">5 分钟</option><option value="15">15 分钟</option><option value="30" selected>30 分钟</option><option value="60">1 小时</option><option value="120">2 小时</option><option value="0">永不</option></select></div>
+      <div class="setting-row"><label>登录错误上限</label><select id="setting-login-limit"><option value="3">3次</option><option value="5" selected>5次</option><option value="7">7次</option><option value="11">11次</option><option value="99">自定义(最多99)</option></select></div>
+      <div class="setting-row"><label>密码明文显示时长</label><select id="setting-reveal-duration"><option value="3" selected>3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="30">30 秒</option><option value="0">永不隐藏</option></select></div>
+      <div class="setting-row"><label>剪切板自动清除</label><select id="setting-clipboard"><option value="1" selected>1 分钟</option><option value="3">3 分钟</option><option value="5">5 分钟</option><option value="0">不清除</option></select></div>
+    </div>`,
 
   shortcuts: `
     <h3>快捷键</h3>
-    <div class="setting-row"><label>搜索</label><input id="shortcut-search" value="Ctrl+F" class="shortcut-input" readonly></div>
-    <div class="setting-row"><label>新建</label><input id="shortcut-new" value="Ctrl+N" class="shortcut-input" readonly></div>`,
+    <p class="section-desc">全局快捷操作</p>
+    <div class="settings-section">
+      <div class="setting-row"><label>搜索</label><span class="shortcut-badge"><span>Ctrl</span><span class="key-plus">+</span><span>F</span></span></div>
+      <div class="setting-row"><label>新建</label><span class="shortcut-badge"><span>Ctrl</span><span class="key-plus">+</span><span>N</span></span></div>
+    </div>`,
 
-  trash: `<h3>回收站</h3><div class="trash-list" id="trash-list"><p class="trash-empty">回收站为空</p></div>
-    <button class="btn btn-small btn-danger" id="clear-trash-btn">清空回收站</button>`,
+  trash: `<h3>回收站</h3><p class="section-desc">已删除的密码条目，可恢复或永久清空</p>
+    <div class="settings-section"><div class="trash-list" id="trash-list"><p class="trash-empty">回收站为空</p></div></div>
+    <button class="btn btn-small btn-danger" id="clear-trash-btn" style="margin-top:8px;">清空回收站</button>`,
 
-  vaults: `<h3>密码库管理</h3><div class="vault-list" id="vault-list"></div>
-    <button class="btn btn-small" id="add-vault-btn">+ 新建密码库</button>`,
+  vaults: `<h3>密码库管理</h3><p class="section-desc">管理你的密码库分组</p>
+    <div class="settings-section"><div class="vault-list" id="vault-list"></div>
+    <div class="vault-list-footer"><button class="btn btn-small btn-add-vault" id="add-vault-btn">+ 新建密码库</button></div></div>`,
 
   sync: `
     <h3>同步</h3>
@@ -80,7 +91,7 @@ function switchPanel(cat) {
 async function bindPanelEvents(cat) {
   if (cat === 'general') {
     document.getElementById('setting-language').value = settingsCache.language || 'zh-CN';
-    document.getElementById('setting-theme').value = settingsCache.theme || 'dark';
+    document.getElementById('setting-theme').value = settingsCache.theme || 'light';
     document.getElementById('setting-log').checked = settingsCache.logEnabled || false;
 
     // zoom
@@ -430,7 +441,7 @@ function renderVaultList() {
       <span class="vault-name">${escHtml(v.name)}</span>
       <span class="vault-id">ID: ${v.id}</span>
       <span class="vault-count">${(state.entries || []).filter(e => e.vaultIds && e.vaultIds.includes(v.id)).length} 条</span>
-      ${vaults.length > 1 ? `<button class="btn btn-tiny btn-danger" data-delete-vault="${v.id}">删除</button>` : ''}
+      ${vaults.length > 1 ? `<button class="btn-delete-vault" data-delete-vault="${v.id}">删除</button>` : ''}
     </div>`).join('');
 
   list.querySelectorAll('[data-delete-vault]').forEach(btn => {

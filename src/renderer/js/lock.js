@@ -3,6 +3,10 @@ let recoveryKey = null;
 let setupPassword = null;
 
 function initLockScreen() {
+  document.getElementById('lock-password').value = '';
+  document.getElementById('lock-key-input').value = '';
+  document.getElementById('lock-error').textContent = '';
+
   document.getElementById('lock-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockWithPassword();
   });

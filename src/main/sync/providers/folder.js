@@ -64,7 +64,7 @@ class FolderProvider {
       const raw = fs.readFileSync(p, 'utf8');
       const nl = raw.indexOf('\n');
       const hdr = JSON.parse(raw.substring(0, nl));
-      return { exists: true, version: hdr.v || 0 };
+      return { exists: true, version: hdr.version || 0, vaultId: hdr.vaultId || '', contentHash: hdr.contentHash || '', itemCount: hdr.itemCount || 0 };
     } catch (e) {
       return { exists: false, version: 0 };
     }

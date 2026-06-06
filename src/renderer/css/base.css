@@ -1,104 +1,192 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
   font-size: 13px; line-height: 1.6;
   overflow: hidden; user-select: none;
   height: 100vh;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-page);
 }
 
-/* ── shadcn-inspired color system ── */
+/* ================================================================
+   Phase 1 — 色板系统 (Light default, Dark via .theme-dark)
+   ================================================================ */
+
 :root {
-  --bg-primary: #09090b;
-  --bg-secondary: #18181b;
-  --bg-tertiary: #27272a;
-  --bg-surface: #1f1f23;
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --accent: #818cf8;
-  --accent-hover: #6366f1;
-  --accent-text: #ffffff;
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --border: #27272a;
-  --border-hover: #3f3f46;
-  --ring: rgba(129,140,248,0.25);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-  --shadow: 0 4px 12px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.2);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
-  --radius: 8px;
-  --radius-lg: 14px;
+  /* ── 三层背景 ── */
+  --bg-page:     #F0F0F3;   /* 最外层页面背景 */
+  --bg-surface:  #F2F2F7;   /* hover / 微交互面 */
+  --bg-raised:   #FAFAFC;   /* 微凸卡片（分组头/底部栏） */
+
+  /* ── 兼容旧变量名 (Phase 2-6 逐步迁移) ── */
+  --bg-primary:    #F0F0F3;
+  --bg-secondary:  #FFFFFF;
+  --bg-tertiary:   #FAFAFC;
+
+  /* ── 文字 ── */
+  --text-primary:   #1B1B1F;
+  --text-secondary: #5E5E6E;
+  --text-muted:     #9B9BAB;
+  --text-inverse:   #FFFFFF;
+
+  /* ── 主色 — 蓝紫 ── */
+  --accent:        #5B5FC7;
+  --accent-hover:  #4A4EB5;
+  --accent-text:   #FFFFFF;
+  --accent-light:  #EEEBFF;   /* bg-active / 浅底 */
+
+  /* ── 语义色 ── */
+  --danger:        #EF4444;
+  --danger-hover:  #DC2626;
+  --success:       #22C55E;
+  --warning:       #F59E0B;
+
+  /* ── 边框 ── */
+  --border:        #E8E8EE;
+  --border-hover:  #D4D4DE;
+  --border-input:  #C8C8D4;
+
+  /* ── 聚焦环 ── */
+  --ring:          rgba(91, 95, 199, 0.25);
+
+  /* ── 阴影 (弱) ── */
+  --shadow-sm:     0 1px 2px rgba(0,0,0,0.04);
+  --shadow:        0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-lg:     0 8px 24px rgba(0,0,0,0.08);
+
+  /* ── 圆角 ── */
+  --radius:     6px;
+  --radius-sm:  4px;
+  --radius-lg:  10px;
+  --radius-xl:  14px;
+
+  /* ── 间距 ── */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  12px;
+  --space-lg:  16px;
+  --space-xl:  20px;
+  --space-2xl: 24px;
+
+  /* ── 新名别名 (Phase 2+ 使用) ── */
+  --bg-hover:                var(--bg-surface);
+  --bg-active:               var(--accent-light);
+  --color-primary:           var(--accent);
+  --color-primary-hover:     var(--accent-hover);
+  --color-primary-light:     var(--accent-light);
+  --text-tertiary:           var(--text-muted);
+  --border-light:            var(--border);
+  --border-medium:           var(--border-hover);
 }
 
-body.theme-light {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f4f4f5;
-  --bg-surface: #fafafa;
-  --text-primary: #18181b;
-  --text-secondary: #71717a;
-  --text-muted: #a1a1aa;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --accent-text: #ffffff;
-  --border: #e4e4e7;
-  --border-hover: #d4d4d8;
-  --ring: rgba(99,102,241,0.2);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+/* ── 暗色模式 ── */
+body.theme-dark {
+  --bg-page:     #1A1A20;
+  --bg-surface:  #32323E;
+  --bg-raised:   #2E2E3A;
+
+  --bg-primary:    #1A1A20;
+  --bg-secondary:  #24242E;
+  --bg-tertiary:   #2E2E3A;
+
+  --text-primary:   #EAEAF0;
+  --text-secondary: #9E9EB4;
+  --text-muted:     #6A6A80;
+  --text-inverse:   #FFFFFF;
+
+  --accent:        #818CF8;
+  --accent-hover:  #6366F1;
+  --accent-text:   #FFFFFF;
+  --accent-light:  #282840;
+
+  --danger:        #EF4444;
+  --danger-hover:  #DC2626;
+  --success:       #22C55E;
+  --warning:       #F59E0B;
+
+  --border:        #363648;
+  --border-hover:  #48485C;
+  --border-input:  #48485C;
+
+  --ring:          rgba(129, 140, 248, 0.2);
+
+  --shadow-sm:     0 1px 2px rgba(0,0,0,0.3);
+  --shadow:        0 4px 12px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-lg:     0 8px 24px rgba(0,0,0,0.5);
+
+  --bg-hover:                var(--bg-surface);
+  --bg-active:               var(--accent-light);
+  --color-primary:           var(--accent);
+  --color-primary-hover:     var(--accent-hover);
+  --color-primary-light:     var(--accent-light);
+  --text-tertiary:           var(--text-muted);
+  --border-light:            var(--border);
+  --border-medium:           var(--border-hover);
 }
+
+/* ── 旧 .theme-light 重定向为移除 (现在是默认) ── */
+body.theme-light {
+  /* no-op — light is the default now */
+}
+
+/* ── Page transitions ── */
+.page.active {
+  animation: pageIn 0.12s ease;
+}
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
+/* ================================================================
+   Layout
+   ================================================================ */
 
 .page { display: none; }
 .page.active { display: flex; flex-direction: column; height: 100%; }
 
-/* ── Shared Components ── */
+/* ================================================================
+   Shared Components (tinted for new palette)
+   ================================================================ */
+
 .btn {
-  padding: 8px 16px; border: none; border-radius: var(--radius);
+  padding: 8px 16px; border: 1px solid transparent; border-radius: var(--radius);
   font-size: 13px; font-weight: 500; cursor: pointer;
   background: var(--bg-tertiary); color: var(--text-secondary);
-  transition: all 0.15s;
+  transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.btn:hover { background: var(--border); color: var(--text-primary); }
+.btn:hover { background: var(--bg-surface); color: var(--text-primary); border-color: var(--border); }
 .btn:active { transform: scale(0.98); }
 
-.btn-primary { background: var(--accent); color: var(--accent-text); }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 
-.btn-danger { background: var(--danger); color: white; }
-.btn-danger:hover { background: var(--danger-hover); }
+.btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+.btn-danger:hover { background: var(--danger-hover); border-color: var(--danger-hover); }
 
 .btn-small { padding: 5px 12px; font-size: 12px; }
 .btn-icon { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-secondary); padding: 4px; }
 .btn-icon:hover { color: var(--text-primary); }
-.btn-tiny { padding: 2px 8px; font-size: 11px; border-radius: 6px; }
-.btn-warning { background: var(--warning); color: #fff; }
+.btn-tiny { padding: 2px 8px; font-size: 11px; border-radius: var(--radius-sm); }
+.btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
 .btn-warning:hover { filter: brightness(1.1); }
 
-.paste-btn { font-size: 11px; color: var(--success); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+.paste-btn { font-size: 11px; color: var(--success); padding: 2px 6px; border-radius: var(--radius-sm); white-space: nowrap; }
 .paste-btn:hover { background: var(--success); color: #fff; }
-.copy-btn { font-size: 11px; color: var(--accent); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+.copy-btn { font-size: 11px; color: var(--accent); padding: 2px 6px; border-radius: var(--radius-sm); white-space: nowrap; }
 .copy-btn:hover { background: var(--accent); color: #fff; }
 
 .input {
-  width: 100%; padding: 8px 12px; border: 1px solid var(--border);
-  border-radius: var(--radius); background: var(--bg-primary);
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border-input);
+  border-radius: var(--radius); background: var(--bg-raised);
   color: var(--text-primary); font-size: 13px; outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--ring); }
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
 .input::placeholder { color: var(--text-muted); }
 
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
   display: flex; align-items: center; justify-content: center; z-index: 1000;
 }
 .modal {
   background: var(--bg-secondary); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 24px; width: 420px; max-height: 80vh;
+  border-radius: var(--radius-xl); padding: 24px; width: 420px; max-height: 80vh;
   overflow-y: auto; box-shadow: var(--shadow-lg);
   color: var(--text-primary);
 }
@@ -120,4 +208,15 @@ body.theme-light {
   background: var(--bg-tertiary); color: var(--text-primary);
   padding: 10px 24px; border-radius: var(--radius); font-size: 13px;
   z-index: 2000; border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+
+/* ================================================================
+   Focus ring (global)
+   ================================================================ */
+
+input:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
 }
