@@ -273,6 +273,9 @@ async function checkCloudUpdate() {
     if (pull.success) {
       showToast('已下载云端 v' + result.remoteVersion);
       state = mainState = await window.api.reloadState();
+      document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
+      document.getElementById('sync-status-icon').textContent = '●';
+      setSyncTime();
       const q = document.getElementById('main-search').value;
       const global = document.getElementById('search-global').checked;
       renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
@@ -407,6 +410,9 @@ let editingOriginal = {}; // original values to detect changes
 
 async function refreshAfterSync() {
   state = mainState = await window.api.reloadState();
+  document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
+  document.getElementById('sync-status-icon').textContent = '●';
+  setSyncTime();
   const q = document.getElementById('main-search').value;
   const global = document.getElementById('search-global').checked;
   renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);

@@ -135,6 +135,14 @@ function setupVaultHandlers() {
   ipcMain.handle('vault:rename-vault', async (_, id, name) => { const result = vault.renameVault(id, name); return { success: result }; });
   ipcMain.handle('vault:reorder-vaults', async (_, order) => { vault.reorderVaults(order); return { success: true }; });
 
+  ipcMain.handle('vault:verify-password', async (_, password) => {
+    return vault.verifyMasterPassword(password);
+  });
+  ipcMain.handle('vault:unhide-all-entries', async () => {
+    const count = vault.unhideAllEntries();
+    return { success: true, count };
+  });
+
   ipcMain.handle('vault:export-plain', async (_, filePath) => {
     const data = vault.exportPlain();
     fs.writeFileSync(filePath, JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), entries: data }, null, 2));

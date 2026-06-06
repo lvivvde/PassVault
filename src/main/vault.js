@@ -12,6 +12,8 @@ class VaultService {
     this.recoveryKeyDisplay = null;
     this._crypto = null;
     this._meta = {}; // { vaultId, deviceId, version, lastSyncVersion }
+    this._cachedPassword = null; // for reloadState (master password)
+    this._cachedRecoveryKey = null; // for reloadState (recovery key)
   }
 
   get crypto() { return this._crypto; }
@@ -85,6 +87,8 @@ class VaultService {
     };
 
     this.crypto = vc;
+    this._cachedPassword = password;
+    if (keyChoice === 'custom') this._cachedRecoveryKey = customKey;
     this.vaultPath = storagePath || path.join(
       require('electron').app.getPath('userData'), 'PassVault', 'vault.pvault'
     );
@@ -164,6 +168,7 @@ class VaultService {
     this.data = JSON.parse(payloadJson);
     if (!this.data.trash) this.data.trash = [];
     this.crypto = cv;
+    this._cachedPassword = password;
     logger.vault('UNLOCK_MP', { entries: this.data.entries.length, vaults: this.data.vaults.length });
     return true;
   }
@@ -176,6 +181,7 @@ class VaultService {
     this.data = JSON.parse(payloadJson);
     if (!this.data.trash) this.data.trash = [];
     this.crypto = cv;
+    this._cachedRecoveryKey = key;
     logger.vault('UNLOCK_KEY', { entries: this.data.entries.length, vaults: this.data.vaults.length });
     return true;
   }
@@ -183,6 +189,8 @@ class VaultService {
   lock() {
     if (this.crypto) this.crypto.lock();
     this.data = null;
+    this._cachedPassword = null;
+    this._cachedRecoveryKey = null;
   }
 
   resetData() {
@@ -190,6 +198,22 @@ class VaultService {
     this.crypto = null;
     this.recoveryKeyDisplay = null;
     this._meta = {};
+    this._cachedPassword = null;
+    this._cachedRecoveryKey = null;
+  }
+
+  verifyMasterPassword(password) {
+    return this.crypto && this.crypto.unlockWithMasterPassword(password);
+  }
+
+  unhideAllEntries() {
+    if (!this.data || !this.data.entries) return 0;
+    let count = 0;
+    this.data.entries.forEach(e => {
+      if (e.visible === false) { e.visible = true; count++; }
+    });
+    if (count > 0) this.save();
+    return count;
   }
 
   addEntry(entry) {
@@ -338,15 +362,37 @@ class VaultService {
     this.save();
   }
 
-  // reload data from file without re-unlocking (for sync pull)
+  // reload data from file with full unlock flow (for sync pull)
   reloadState(filePath) {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const nl = raw.indexOf('\n');
-    const hdr = JSON.parse(raw.substring(0, nl));
-    const encrypted = raw.substring(nl + 1);
-    const payloadJson = this.crypto.decryptPayload(encrypted, hdr.payloadIv, hdr.payloadAuthTag);
+    const { crypto: cv, encrypted, header } = this.load(filePath);
+
+    // Try master password unlock
+    if (this._cachedPassword) {
+      if (!cv.unlockWithMasterPassword(this._cachedPassword)) {
+        this._cachedPassword = null;
+        throw new Error('Password mismatch on reload — cloud vault is from a different master password');
+      }
+    } else if (this._cachedRecoveryKey) {
+      if (!cv.unlockWithRecoveryKey(this._cachedRecoveryKey, cv.keySalt)) {
+        this._cachedRecoveryKey = null;
+        throw new Error('Recovery key mismatch on reload — cloud vault is from a different key');
+      }
+    } else {
+      throw new Error('No cached credentials — must lock and re-unlock');
+    }
+
+    const payloadJson = cv.decryptPayload(encrypted, header.payloadIv, header.payloadAuthTag);
     this.data = JSON.parse(payloadJson);
-    this._meta = { vaultId: hdr.vaultId || '', deviceId: hdr.deviceId || '', version: hdr.version || 0, lastSyncVersion: hdr.lastSyncVersion || 0, contentHash: hdr.contentHash || '', itemCount: hdr.itemCount || 0 };
+    if (!this.data.trash) this.data.trash = [];
+    this.crypto = cv;
+    this._meta = {
+      vaultId: header.vaultId || '',
+      deviceId: header.deviceId || '',
+      version: header.version || 0,
+      lastSyncVersion: header.lastSyncVersion || 0,
+      contentHash: header.contentHash || '',
+      itemCount: header.itemCount || 0
+    };
   }
 
   changeMasterPassword(oldPassword, newPassword) {

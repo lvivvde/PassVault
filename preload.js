@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('api', {
   deleteVault: (id, action) => ipcRenderer.invoke('vault:delete-vault', id, action),
   renameVault: (id, name) => ipcRenderer.invoke('vault:rename-vault', id, name),
   reorderVaults: (order) => ipcRenderer.invoke('vault:reorder-vaults', order),
+  verifyPassword: (password) => ipcRenderer.invoke('vault:verify-password', password),
+  unhideAllEntries: () => ipcRenderer.invoke('vault:unhide-all-entries'),
 
   exportPlain: (path) => ipcRenderer.invoke('vault:export-plain', path),
   exportEncrypted: (path) => ipcRenderer.invoke('vault:export-encrypted', path),

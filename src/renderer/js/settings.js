@@ -20,6 +20,7 @@ const panels = {
       <div class="setting-row"><label>登录错误上限</label><select id="setting-login-limit"><option value="3">3次</option><option value="5" selected>5次</option><option value="7">7次</option><option value="11">11次</option><option value="99">自定义(最多99)</option></select></div>
       <div class="setting-row"><label>密码明文显示时长</label><select id="setting-reveal-duration"><option value="3" selected>3 秒</option><option value="5">5 秒</option><option value="10">10 秒</option><option value="30">30 秒</option><option value="0">永不隐藏</option></select></div>
       <div class="setting-row"><label>剪切板自动清除</label><select id="setting-clipboard"><option value="1" selected>1 分钟</option><option value="3">3 分钟</option><option value="5">5 分钟</option><option value="0">不清除</option></select></div>
+      <div class="setting-row"><label>显示隐藏密码</label><button class="btn" id="setting-unhide-all">验证主密码并显示全部</button></div>
     </div>`,
 
   shortcuts: `
@@ -137,6 +138,14 @@ async function bindPanelEvents(cat) {
     });
     document.getElementById('setting-change-password').addEventListener('click', showChangePassword);
     document.getElementById('setting-regenerate-key').addEventListener('click', showRegenerateKey);
+    document.getElementById('setting-unhide-all').addEventListener('click', async () => {
+      const pw = prompt('请输入主密码验证');
+      if (!pw) return;
+      const ok = await window.api.verifyPassword(pw);
+      if (!ok) { showToast('密码错误'); return; }
+      const result = await window.api.unhideAllEntries();
+      showToast('已显示 ' + result.count + ' 项隐藏密码');
+    });
 
     // clipboard (merged into security)
     document.getElementById('setting-clipboard').value = settingsCache.clipboardClearMinutes || 1;
@@ -227,7 +236,10 @@ async function bindPanelEvents(cat) {
       const cfg = { mode: 'webdav', url, username: user, password: pass, interval: parseInt(document.getElementById('setting-sync-interval').value) };
       await window.api.syncConfig(cfg);
       const result = await window.api.syncPull();
-      showToast(result.success ? `下载成功 (${(result.size/1024).toFixed(1)} KB)，请重新解锁` : result.message);
+      if (result.success) {
+        try { await window.api.reloadState(); } catch (e) { /* vault key may differ */ }
+        showToast(`下载成功 (${(result.size/1024).toFixed(1)} KB)`);
+      } else { showToast(result.message); }
     });
 
     document.getElementById('setting-sync-interval').addEventListener('change', async () => {
