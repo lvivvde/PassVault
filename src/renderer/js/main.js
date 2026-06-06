@@ -58,6 +58,38 @@ async function initMainPage() {
 
   renderMainSidebar();
 
+  // sync button and status
+  const syncIcon = document.getElementById('sync-status-icon');
+  initSyncStatus();
+
+  document.getElementById('main-sync-btn').addEventListener('click', async () => {
+    syncIcon.textContent = '⟳';
+    try {
+      const result = await window.api.syncPush();
+      if (result.success) {
+        syncIcon.className = 'sync-status-icon synced';
+        syncIcon.textContent = '●';
+      } else {
+        syncIcon.className = 'sync-status-icon unsaved';
+        syncIcon.textContent = '✕';
+        showToast('同步失败: ' + (result.message || ''));
+      }
+    } catch (e) {
+      syncIcon.className = 'sync-status-icon unsaved';
+      syncIcon.textContent = '✕';
+    }
+  });
+
+  window.api.onSyncStatus((status) => {
+    if (status.type === 'synced') {
+      syncIcon.className = 'sync-status-icon synced';
+      syncIcon.textContent = '●';
+    } else if (status.type === 'unsaved') {
+      syncIcon.className = 'sync-status-icon unsaved';
+      syncIcon.textContent = '✕';
+    }
+  });
+
   document.getElementById('modal-close').addEventListener('click', closeEditModal);
   document.getElementById('modal-cancel').addEventListener('click', closeEditModal);
   document.getElementById('modal-save').addEventListener('click', saveEditModal);
@@ -166,6 +198,27 @@ function renderMainSidebar() {
 function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function initSyncStatus() {
+  const cfg = await window.api.syncGetConfig();
+  const icon = document.getElementById('sync-status-icon');
+  if (!cfg || cfg.mode === 'none') {
+    icon.textContent = '○';
+    icon.className = 'sync-status-icon';
+    return;
+  }
+  // configured but unknown sync state → unsaved until proven otherwise
+  icon.className = 'sync-status-icon unsaved';
+  icon.textContent = '✕';
+}
+
+function markUnsaved() {
+  const icon = document.getElementById('sync-status-icon');
+  if (icon.textContent !== '○') {
+    icon.className = 'sync-status-icon unsaved';
+    icon.textContent = '✕';
+  }
 }
 
 let editingId = null;
@@ -312,6 +365,7 @@ async function saveEditModal() {
   renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
   renderMainSidebar();
   showToast(t('main.savedToast'));
+  markUnsaved();
 }
 
 function confirmDeleteEntry() {
@@ -337,6 +391,7 @@ function confirmDeleteEntry() {
     renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
     renderMainSidebar();
     showToast(t('main.deletedToast'));
+    markUnsaved();
   });
 }
 
