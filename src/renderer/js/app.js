@@ -34,7 +34,7 @@ async function initApp() {
 
   const logoPath = await window.api.getAppPath();
   const logo = document.getElementById('header-logo');
-  logo.src = `file://${logoPath}/icon/logo.png`;
+  logo.src = `file://${logoPath}/icon/logo.jpg`;
 
   const settings = await window.api.getSettings();
   currentLang = settings.language || 'zh-CN';
