@@ -241,7 +241,11 @@ async function checkCloudUpdate() {
     const pull = await window.api.syncPull();
     if (pull.success) {
       showToast('已下载云端 v' + result.remoteVersion);
-      setTimeout(async () => { await window.api.lock(); showPage('lock'); initLockScreen(); }, 500);
+      state = mainState = await window.api.reloadState();
+      const q = document.getElementById('main-search').value;
+      const global = document.getElementById('search-global').checked;
+      renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
+      renderMainSidebar();
     } else {
       showToast('下载失败: ' + (pull.message || ''));
     }
@@ -282,8 +286,8 @@ async function showSyncDiffDialog(cmp) {
     const r = await window.api.syncResolveDownload();
     overlay.style.display = 'none';
     if (r.success) {
-      showToast('已从云端下载，请重新解锁');
-      setTimeout(async () => { await window.api.lock(); showPage('lock'); initLockScreen(); }, 500);
+      showToast('已从云端下载');
+      await refreshAfterSync();
     } else {
       showToast('下载失败: ' + (r.message || ''));
     }
@@ -353,8 +357,8 @@ async function showSyncDiffDialog(cmp) {
     overlay.style.display = 'none';
     const r = await window.api.syncResolveDownload();
     if (r.success) {
-      showToast('已下载云端版本，重新解锁后生效');
-      setTimeout(async () => { await window.api.lock(); showPage('lock'); initLockScreen(); }, 500);
+      showToast('已下载云端版本');
+      await refreshAfterSync();
     } else { showToast('下载失败: ' + (r.message || '')); }
   });
 }
@@ -369,6 +373,14 @@ function markUnsaved() {
 
 let editingId = null;
 let editingOriginal = {}; // original values to detect changes
+
+async function refreshAfterSync() {
+  state = mainState = await window.api.reloadState();
+  const q = document.getElementById('main-search').value;
+  const global = document.getElementById('search-global').checked;
+  renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
+  renderMainSidebar();
+}
 
 async function showEditModal(id = null) {
   editingId = id;

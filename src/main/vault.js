@@ -332,6 +332,17 @@ class VaultService {
     this.save();
   }
 
+  // reload data from file without re-unlocking (for sync pull)
+  reloadState(filePath) {
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const nl = raw.indexOf('\n');
+    const hdr = JSON.parse(raw.substring(0, nl));
+    const encrypted = raw.substring(nl + 1);
+    const payloadJson = this.crypto.decryptPayload(encrypted, hdr.payloadIv, hdr.payloadAuthTag);
+    this.data = JSON.parse(payloadJson);
+    this._meta = { vaultId: hdr.vaultId || '', deviceId: hdr.deviceId || '', version: hdr.version || 0, lastSyncVersion: hdr.lastSyncVersion || 0, contentHash: hdr.contentHash || '', itemCount: hdr.itemCount || 0 };
+  }
+
   changeMasterPassword(oldPassword, newPassword) {
     if (!this.crypto.unlockWithMasterPassword(oldPassword)) return false;
     const mpSalt = generateSalt();

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('vault:setup', password, keyChoice, storagePath, customKey),
   save: () => ipcRenderer.invoke('vault:save'),
   getState: () => ipcRenderer.invoke('vault:get-state'),
+  reloadState: () => ipcRenderer.invoke('vault:reload-state'),
   resetData: () => ipcRenderer.invoke('vault:reset-data'),
 
   addEntry: (entry) => ipcRenderer.invoke('vault:add-entry', entry),

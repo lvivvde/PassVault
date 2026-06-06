@@ -112,6 +112,7 @@ function setupVaultHandlers() {
 
   ipcMain.handle('vault:save', async () => { vault.save(); return { success: true }; });
   ipcMain.handle('vault:get-state', async () => vault.state);
+  ipcMain.handle('vault:reload-state', async () => { vault.reloadState(vault.vaultPath); return vault.state; });
 
   ipcMain.handle('vault:add-entry', async (_, entry) => {
     try { const result = vault.addEntry(entry); return { success: true, entries: result }; }
