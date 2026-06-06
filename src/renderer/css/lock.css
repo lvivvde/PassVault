@@ -1,5 +1,5 @@
 /* Lock Screen */
-#page-lock { background: radial-gradient(ellipse at top, #18181b, #09090b); }
+#page-lock { background: radial-gradient(ellipse at top, #18181b, #09090b); justify-content: center; align-items: center; }
 .lock-container {
   width: 360px; background: var(--bg-secondary); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 36px 32px; text-align: center;
@@ -35,7 +35,7 @@
 .lock-reset:hover { color: var(--danger); }
 
 /* Setup Wizard */
-#page-setup { background: var(--bg-primary); }
+#page-setup { background: var(--bg-primary); justify-content: center; align-items: center; }
 .setup-container {
   width: 460px; background: var(--bg-secondary); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-lg);
