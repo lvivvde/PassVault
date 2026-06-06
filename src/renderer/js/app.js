@@ -47,10 +47,10 @@ async function initApp() {
   const logo = document.getElementById('header-logo');
   logo.src = `file://${logoPath}/icon/logo.png`;
 
-  const settings = await window.api.getSettings();
-  if (settings.theme) {
+  const appSettings = await window.api.getSettings();
+  if (appSettings.theme) {
     document.body.classList.remove('theme-dark', 'theme-light');
-    document.body.classList.add('theme-' + settings.theme);
+    document.body.classList.add('theme-' + appSettings.theme);
   }
 
   window.api.onCloseRequest(() => {
