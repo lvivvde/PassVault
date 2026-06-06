@@ -218,6 +218,11 @@ function setupAppHandlers() {
 }
 
 function setupSyncHandlers() {
+  // restore saved sync config on startup
+  const savedCfg = settings.get('syncConfig') || {};
+  if (savedCfg.mode && savedCfg.mode !== 'none') {
+    sync.updateConfig(savedCfg);
+  }
   ipcMain.handle('sync:test', async (_, url, username, password) => {
     return sync.testConnection({ mode: 'webdav', url, username, password });
   });
