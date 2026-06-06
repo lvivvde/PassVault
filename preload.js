@@ -51,5 +51,11 @@ contextBridge.exposeInMainWorld('api', {
 
   onCloseRequest: (callback) => ipcRenderer.on('app:close-request', callback),
   onLockRequired: (callback) => ipcRenderer.on('app:lock-required', callback),
-  onSyncStatus: (callback) => ipcRenderer.on('sync:status', (_, status) => callback(status))
+  onSyncStatus: (callback) => ipcRenderer.on('sync:status', (_, status) => callback(status)),
+
+  syncTest: (url, username, password) => ipcRenderer.invoke('sync:test', url, username, password),
+  syncPush: () => ipcRenderer.invoke('sync:push'),
+  syncPull: () => ipcRenderer.invoke('sync:pull'),
+  syncConfig: (config) => ipcRenderer.invoke('sync:config', config),
+  syncGetConfig: () => ipcRenderer.invoke('sync:get-config')
 });

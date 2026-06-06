@@ -18,6 +18,7 @@
   <img src="https://img.shields.io/badge/electron-31.7.7-brightgreen" alt="Electron">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
   <img src="https://img.shields.io/badge/encryption-AES--256--GCM-red" alt="Encryption">
+  <img src="https://img.shields.io/badge/webdav-sync-orange" alt="WebDAV">
 </p>
 
 <hr>
@@ -78,8 +79,10 @@ passvault/
 │   │   ├── crypto.js    # PBKDF2 + AES-256-GCM engine
 │   │   ├── vault.js     # Data CRUD, multi-vault, trash
 │   │   ├── settings.js  # JSON config manager
+│   │   ├── logger.js    # Lazy-init file logging
+│   │   ├── sync.js      # WebDAV sync (push/pull/auto)
 │   │   ├── autoLock.js  # Idle detection timer
-│   │   └── ipc-handlers.js  # 30 IPC channels
+│   │   └── ipc-handlers.js  # 40+ IPC channels
 │   ├── renderer/        # UI (SPA, 4 pages)
 │   │   ├── index.html
 │   │   ├── css/         # base, lock, main, settings

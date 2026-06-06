@@ -33,10 +33,16 @@ const panels = {
     <h3>同步</h3>
     <div class="setting-row"><label>同步方式</label><select id="setting-sync-mode"><option value="none">无</option><option value="webdav">WebDAV</option><option value="folder">本地文件夹</option></select></div>
     <div id="sync-webdav-config" style="display:none">
-      <div class="setting-row"><input class="input" placeholder="WebDAV 地址" id="setting-webdav-url"></div>
+      <div class="setting-row"><input class="input" placeholder="WebDAV 地址 (如 https://dav.example.com)" id="setting-webdav-url"></div>
       <div class="setting-row"><input class="input" placeholder="用户名" id="setting-webdav-user"></div>
       <div class="setting-row"><input type="password" class="input" placeholder="密码" id="setting-webdav-password"></div>
-      <button class="btn btn-small" id="test-webdav-btn">测试连接</button>
+      <div class="setting-row"><label>同步间隔</label><select id="setting-sync-interval"><option value="5">5 分钟</option><option value="15" selected>15 分钟</option><option value="30">30 分钟</option><option value="60">1 小时</option></select></div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button class="btn btn-small" id="test-webdav-btn">测试连接</button>
+        <button class="btn btn-small" id="sync-push-btn">立即上传</button>
+        <button class="btn btn-small" id="sync-pull-btn">立即下载</button>
+      </div>
+      <p id="sync-status-text" style="font-size:11px;color:var(--text-muted);margin-top:6px;"></p>
     </div>
     <div id="sync-folder-config" style="display:none">
       <div class="setting-row"><input class="input" id="setting-folder-path" readonly><button class="btn btn-small" id="pick-folder-btn">浏览</button></div>
@@ -131,12 +137,72 @@ function bindPanelEvents(cat) {
   }
 
   if (cat === 'sync') {
-    document.getElementById('setting-sync-mode').value = settingsCache.syncMode || 'none';
-    document.getElementById('setting-sync-mode').addEventListener('change', (e) => {
-      const v = e.target.value;
-      document.getElementById('sync-webdav-config').style.display = v === 'webdav' ? 'block' : 'none';
-      document.getElementById('sync-folder-config').style.display = v === 'folder' ? 'block' : 'none';
-      window.api.setSetting('syncMode', v);
+    const syncCfg = settingsCache.syncConfig || {};
+    const mode = document.getElementById('setting-sync-mode');
+    mode.value = syncCfg.mode || 'none';
+
+    const webdavDiv = document.getElementById('sync-webdav-config');
+    const folderDiv = document.getElementById('sync-folder-config');
+    function toggleSyncConfig() {
+      webdavDiv.style.display = mode.value === 'webdav' ? 'block' : 'none';
+      folderDiv.style.display = mode.value === 'folder' ? 'block' : 'none';
+    }
+    mode.addEventListener('change', () => {
+      toggleSyncConfig();
+      const cfg = { mode: mode.value };
+      if (cfg.mode !== 'webdav') {
+        window.api.syncConfig({ mode: cfg.mode });
+      }
+    });
+    toggleSyncConfig();
+
+    if (syncCfg.url) document.getElementById('setting-webdav-url').value = syncCfg.url;
+    if (syncCfg.username) document.getElementById('setting-webdav-user').value = syncCfg.username;
+    if (syncCfg.password) document.getElementById('setting-webdav-password').value = syncCfg.password;
+    document.getElementById('setting-sync-interval').value = syncCfg.interval || 15;
+
+    document.getElementById('test-webdav-btn').addEventListener('click', async () => {
+      const url = document.getElementById('setting-webdav-url').value;
+      const user = document.getElementById('setting-webdav-user').value;
+      const pass = document.getElementById('setting-webdav-password').value;
+      if (!url || !user || !pass) { showToast('请填写 WebDAV 地址、用户名和密码'); return; }
+      showToast('正在测试连接...');
+      const result = await window.api.syncTest(url, user, pass);
+      showToast(result.message);
+      document.getElementById('sync-status-text').textContent = result.message;
+    });
+
+    document.getElementById('sync-push-btn').addEventListener('click', async () => {
+      const url = document.getElementById('setting-webdav-url').value;
+      const user = document.getElementById('setting-webdav-user').value;
+      const pass = document.getElementById('setting-webdav-password').value;
+      if (!url || !user || !pass) { showToast('请先配置 WebDAV 信息'); return; }
+      // save config first
+      const cfg = { mode: 'webdav', url, username: user, password: pass, interval: parseInt(document.getElementById('setting-sync-interval').value) };
+      await window.api.syncConfig(cfg);
+      const result = await window.api.syncPush();
+      showToast(result.success ? `上传成功 (${(result.size/1024).toFixed(1)} KB)` : result.message);
+    });
+
+    document.getElementById('sync-pull-btn').addEventListener('click', async () => {
+      const url = document.getElementById('setting-webdav-url').value;
+      const user = document.getElementById('setting-webdav-user').value;
+      const pass = document.getElementById('setting-webdav-password').value;
+      if (!url || !user || !pass) { showToast('请先配置 WebDAV 信息'); return; }
+      const cfg = { mode: 'webdav', url, username: user, password: pass, interval: parseInt(document.getElementById('setting-sync-interval').value) };
+      await window.api.syncConfig(cfg);
+      const result = await window.api.syncPull();
+      showToast(result.success ? `下载成功 (${(result.size/1024).toFixed(1)} KB)，请重新解锁` : result.message);
+    });
+
+    document.getElementById('setting-sync-interval').addEventListener('change', async () => {
+      const url = document.getElementById('setting-webdav-url').value;
+      const user = document.getElementById('setting-webdav-user').value;
+      const pass = document.getElementById('setting-webdav-password').value;
+      const interval = parseInt(document.getElementById('setting-sync-interval').value);
+      if (url && user && pass) {
+        await window.api.syncConfig({ mode: 'webdav', url, username: user, password: pass, interval });
+      }
     });
   }
 

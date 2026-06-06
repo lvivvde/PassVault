@@ -4,6 +4,7 @@ const fs = require('fs');
 const vault = require('./vault');
 const settings = require('./settings');
 const logger = require('./logger');
+const sync = require('./sync');
 const AutoLockTimer = require('./autoLock');
 
 let autoLock = null;
@@ -22,6 +23,7 @@ function registerIpcHandlers(getMainWindow) {
   setupDialogHandlers();
   setupClipboardHandler();
   setupAppHandlers();
+  setupSyncHandlers();
 }
 
 function setupLockHandler() {
@@ -314,6 +316,43 @@ function setupAppHandlers() {
     const dir = logger.getLogDir();
     shell.openPath(dir);
     return { success: true };
+  });
+}
+
+function setupSyncHandlers() {
+  ipcMain.handle('sync:test', async (_, url, username, password) => {
+    return sync.testConnection(url, username, password);
+  });
+
+  ipcMain.handle('sync:push', async () => {
+    try {
+      const vaultPath = settings.get('storagePath');
+      if (!vaultPath) throw new Error('未设置存储路径');
+      return await sync.pushVault(vaultPath);
+    } catch (e) { return { success: false, message: e.message }; }
+  });
+
+  ipcMain.handle('sync:pull', async () => {
+    try {
+      const vaultPath = settings.get('storagePath');
+      if (!vaultPath) throw new Error('未设置存储路径');
+      return await sync.pullVault(vaultPath);
+    } catch (e) { return { success: false, message: e.message }; }
+  });
+
+  ipcMain.handle('sync:config', async (_, config) => {
+    sync.updateConfig(config);
+    settings.set('syncConfig', sync.getConfig());
+    if (config.mode && config.mode !== 'none') {
+      sync.startAutoSync(() => settings.get('storagePath'), getWin);
+    } else {
+      sync.stopAutoSync();
+    }
+    return { success: true };
+  });
+
+  ipcMain.handle('sync:get-config', async () => {
+    return settings.get('syncConfig') || { mode: 'none', url: '', username: '', password: '', interval: 15 };
   });
 }
 
