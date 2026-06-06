@@ -35,7 +35,7 @@ async function testConnection(config) {
  * Returns a sync decision object:
  *   { action: 'none'|'upload'|'download'|'conflict', reason, ... }
  */
-async function compare(localMeta, vaultPath) {
+async function compare(localMeta, vaultPath, remoteDecrypt) {
   if (!provider) return { action: 'none', reason: '未配置同步' };
   if (syncConfig.mode === 'none') return { action: 'none', reason: '同步未启用' };
 
@@ -59,7 +59,17 @@ async function compare(localMeta, vaultPath) {
   }
 
   // 5.4 Both exist — complex comparison
-  // 6. vaultId check
+
+  // §3 key verification
+  const canDecryptRemote = remoteDecrypt ? remoteDecrypt.canDecrypt : true;
+  if (!canDecryptRemote) {
+    return { action: 'conflict', reason: '密钥不匹配',
+      type: 'key_mismatch',
+      canDecryptLocal: !!localMeta,
+      canDecryptRemote: false };
+  }
+
+  // §6 vaultId check
   if (localMeta.vaultId && remote.vaultId && localMeta.vaultId !== remote.vaultId) {
     return { action: 'conflict', reason: 'vaultId不一致', type: 'different_vault' };
   }

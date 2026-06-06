@@ -298,7 +298,13 @@ async function showSyncDiffDialog(cmp) {
   }
 
   // Conflict scenarios
-  if (cmp.type === 'different_vault') {
+  if (cmp.type === 'key_mismatch') {
+    title = '密钥不匹配';
+    body = '当前密钥可以打开本地密码库，但无法打开云端同步文件。\n可能原因：云端使用了不同的密钥、属于另一个密码库、或文件已损坏。';
+    buttons = `
+      <button class="btn" id="sync-push-local">⬆ 使用本地数据覆盖云端</button>
+      <button class="btn btn-small" id="sync-cancel">取消同步</button>`;
+  } else if (cmp.type === 'different_vault') {
     title = '密码库不匹配';
     body = '本地和云端属于不同的密码库，不能自动合并。';
     buttons = `

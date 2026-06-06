@@ -271,7 +271,32 @@ function setupSyncHandlers() {
       const cfg = settings.get('syncConfig') || {};
       if (!cfg.mode || cfg.mode === 'none')
         return { action: 'none', reason: '未配置同步' };
-      return await sync.compare(localMeta, vaultPath);
+
+      // try decrypting remote to verify key
+      let remoteDecrypt = { canDecrypt: true };
+      try {
+        const remote = await sync.getRemoteVersion();
+        if (remote.exists) {
+          const os = require('os');
+          const tmpPath = path.join(os.tmpdir(), 'passvault_keycheck.pvault');
+          try { fs.unlinkSync(tmpPath); } catch (e) {}
+          const pullResult = await sync.pullVault(tmpPath);
+          if (pullResult.success && vault.crypto && vault.crypto.isUnlocked) {
+            try {
+              const raw = fs.readFileSync(tmpPath, 'utf8');
+              const nl = raw.indexOf('\n');
+              const hdr = JSON.parse(raw.substring(0, nl));
+              vault.crypto.decryptPayload(raw.substring(nl + 1), hdr.payloadIv, hdr.payloadAuthTag);
+              remoteDecrypt = { canDecrypt: true, remoteMeta: { ...remote, vaultId: hdr.vaultId } };
+            } catch (e) {
+              remoteDecrypt = { canDecrypt: false, remoteMeta: remote };
+            }
+            try { fs.unlinkSync(tmpPath); } catch (e) {}
+          }
+        }
+      } catch (e) { /* decrypt check failed, proceed without */ }
+
+      return await sync.compare(localMeta, vaultPath, remoteDecrypt);
     } catch (e) { return { action: 'none', reason: e.message }; }
   });
 
