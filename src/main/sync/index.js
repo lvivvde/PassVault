@@ -106,8 +106,8 @@ async function compare(localMeta, vaultPath, remoteDecrypt) {
 
   // 10. Remote > Local
   if (rv > lv) {
-    // 10.1 Safe download
-    if (lv === lSync) {
+    // 10.1 Safe download (no local changes since last sync, or never synced)
+    if (lv === lSync || lSync === 0) {
       return { action: 'download', reason: '云端更新', safeAuto: true,
         localVersion: lv, remoteVersion: rv };
     }
@@ -117,6 +117,10 @@ async function compare(localMeta, vaultPath, remoteDecrypt) {
   }
 
   // 11. Same version but content differs
+  if (lSync === 0) {
+    return { action: 'upload', reason: '首次同步', safeAuto: true,
+      localVersion: lv, remoteVersion: rv };
+  }
   return { action: 'conflict', reason: '版本相同内容不同', type: 'hash_mismatch',
     localVersion: lv, remoteVersion: rv };
 }
