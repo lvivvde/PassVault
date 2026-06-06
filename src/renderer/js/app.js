@@ -30,7 +30,16 @@ async function fetchState() {
 }
 
 async function initApp() {
-  initLanguage('zh-CN');
+  const settings = await window.api.getSettings();
+  const lang = (settings && settings.language) || 'zh-CN';
+
+  if (lang !== 'zh-CN') {
+    const r = await window.api.loadLanguage(lang);
+    if (r.success) initLanguage(lang, r.dict);
+    else initLanguage('zh-CN');
+  } else {
+    initLanguage('zh-CN');
+  }
 
   await fetchState();
 

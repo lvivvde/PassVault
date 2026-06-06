@@ -24,6 +24,7 @@ function registerIpcHandlers(getMainWindow) {
   setupClipboardHandler();
   setupAppHandlers();
   setupSyncHandlers();
+  setupI18nHandlers();
 }
 
 function setupLockHandler() {
@@ -216,8 +217,6 @@ function setupAppHandlers() {
   ipcMain.handle('log:get-dir', async () => logger.getLogDir());
   ipcMain.handle('log:open-dir', async () => { const { shell } = require('electron'); shell.openPath(logger.getLogDir()); return { success: true }; });
 }
-
-function setupSyncHandlers() {
   // restore saved sync config on startup
   const savedCfg = settings.get('syncConfig') || {};
   if (savedCfg.mode && savedCfg.mode !== 'none') {
@@ -328,6 +327,19 @@ function setupSyncHandlers() {
       if (!vaultPath) throw new Error('未设置存储路径');
       return await sync.pullVault(vaultPath);
     } catch (e) { return { success: false, message: e.message }; }
+  });
+}
+
+function setupI18nHandlers() {
+  ipcMain.handle('i18n:load', async (_, lang) => {
+    try {
+      const dict = require(`../i18n/${lang}.json`);
+      const flat = {};
+      for (const [mod, keys] of Object.entries(dict)) {
+        for (const [k, v] of Object.entries(keys)) flat[`${mod}.${k}`] = v;
+      }
+      return { success: true, dict: flat };
+    } catch (e) { return { success: false }; }
   });
 }
 

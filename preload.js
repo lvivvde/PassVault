@@ -56,6 +56,8 @@ contextBridge.exposeInMainWorld('api', {
   onLockRequired: (callback) => ipcRenderer.on('app:lock-required', callback),
   onSyncStatus: (callback) => ipcRenderer.on('sync:status', (_, status) => callback(status)),
 
+  loadLanguage: (lang) => ipcRenderer.invoke('i18n:load', lang),
+
   syncTest: (url, username, password) => ipcRenderer.invoke('sync:test', url, username, password),
   syncPush: () => ipcRenderer.invoke('sync:push'),
   syncPull: () => ipcRenderer.invoke('sync:pull'),

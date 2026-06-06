@@ -3,6 +3,7 @@ const panels = {
     <h3>通用</h3>
     <div class="setting-row"><label>语言</label><select id="setting-language"><option value="zh-CN">中文</option><option value="en-US">English</option></select></div>
     <div class="setting-row"><label>主题</label><select id="setting-theme"><option value="dark">深色</option><option value="light">浅色</option></select></div>
+    <div class="setting-row"><label>语言</label><select id="setting-language"><option value="zh-CN">简体中文</option><option value="en">English</option></select></div>
     <div class="setting-row"><label>界面缩放</label><select id="setting-zoom"><option value="0.9">90%</option><option value="1" selected>100%</option><option value="1.1">110%</option><option value="1.25">125%</option></select></div>
     <div class="setting-row"><label>调试日志</label><input type="checkbox" id="setting-log"></div>`,
 
@@ -102,7 +103,10 @@ async function bindPanelEvents(cat) {
           document.body.classList.remove('theme-dark', 'theme-light');
           document.body.classList.add('theme-' + e.target.value);
         }
-        if (id === 'language') setLanguage(e.target.value);
+        if (id === 'language') {
+          await window.api.setSetting('language', e.target.value);
+          window.location.reload();
+        }
       });
     });
     document.getElementById('setting-log').addEventListener('change', async (e) => {
