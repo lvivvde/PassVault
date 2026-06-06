@@ -5,6 +5,25 @@
 .header-logo { height: 28px; width: auto; }
 .header-title { font-size: 16px; font-weight: 600; color: var(--text-primary); flex: 1; }
 
+.settings-gear {
+  position: fixed;
+  bottom: 12px;
+  left: 12px;
+  font-size: 24px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  z-index: 100;
+  line-height: 1;
+}
+.settings-gear:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
 .main-search-bar {
   padding: 10px 16px; border-bottom: 1px solid var(--border);
   display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;

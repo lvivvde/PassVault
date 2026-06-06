@@ -1,13 +1,15 @@
 const electron = require('electron');
 const path = require('path');
 
-const { app, BrowserWindow } = electron;
+const { app, BrowserWindow, Menu } = electron;
 
 let mainWindow = null;
 
 function createWindow() {
   const settings = require('./src/main/settings');
   const bounds = settings.get('windowBounds');
+
+  Menu.setApplicationMenu(null);
 
   mainWindow = new BrowserWindow({
     width: bounds.width || 900,
@@ -16,6 +18,7 @@ function createWindow() {
     minHeight: 450,
     x: bounds.x,
     y: bounds.y,
+    title: '密码保管箱',
     backgroundColor: '#f5f0e8',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
