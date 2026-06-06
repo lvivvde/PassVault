@@ -58,5 +58,7 @@ contextBridge.exposeInMainWorld('api', {
   syncPull: () => ipcRenderer.invoke('sync:pull'),
   syncConfig: (config) => ipcRenderer.invoke('sync:config', config),
   syncGetConfig: () => ipcRenderer.invoke('sync:get-config'),
-  syncCheckUpdate: () => ipcRenderer.invoke('sync:check-update')
+  syncCheckUpdate: () => ipcRenderer.invoke('sync:check-update'),
+  syncCompare: () => ipcRenderer.invoke('sync:compare'),
+  syncMerge: () => ipcRenderer.invoke('sync:merge')
 });

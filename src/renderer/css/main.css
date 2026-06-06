@@ -152,6 +152,14 @@
   display: flex; align-items: center; justify-content: center;
 }
 
+/* ── Sync Diff Dialog ── */
+.diff-list {
+  font-size: 12px; color: var(--text-secondary); margin: 4px 0;
+  padding: 6px 8px; background: var(--bg-surface); border-radius: var(--radius);
+  max-height: 120px; overflow-y: auto;
+}
+.diff-list b { color: var(--text-primary); }
+
 /* ── Vault Dropdown ── */
 .vault-dropdown { position: relative; width: 100%; }
 .vault-dropdown-toggle {

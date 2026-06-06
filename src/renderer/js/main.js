@@ -63,21 +63,22 @@ async function initMainPage() {
   initSyncStatus();
 
   document.getElementById('main-sync-btn').addEventListener('click', async () => {
-    syncIcon.textContent = '⟳';
-    try {
-      const result = await window.api.syncPush();
-      if (result.success) {
-        syncIcon.className = 'sync-status-icon synced';
-        syncIcon.textContent = '●';
-      } else {
-        syncIcon.className = 'sync-status-icon unsaved';
-        syncIcon.textContent = '✕';
-        showToast('同步失败: ' + (result.message || ''));
-      }
-    } catch (e) {
-      syncIcon.className = 'sync-status-icon unsaved';
-      syncIcon.textContent = '✕';
+    const icon = document.getElementById('sync-status-icon');
+    icon.textContent = '⟳';
+    const cmp = await window.api.syncCompare();
+    if (!cmp.ok) {
+      icon.className = 'sync-status-icon unsaved';
+      icon.textContent = '✕';
+      showToast(cmp.reason || '同步失败');
+      return;
     }
+    if (!cmp.hasDiff) {
+      icon.className = 'sync-status-icon synced';
+      icon.textContent = '●';
+      showToast('本地与云端一致，无需同步');
+      return;
+    }
+    showSyncDiffDialog(cmp);
   });
 
   window.api.onSyncStatus((status) => {
@@ -243,6 +244,64 @@ async function checkCloudUpdate() {
       setTimeout(async () => { await window.api.lock(); showPage('lock'); initLockScreen(); }, 500);
     } else {
       showToast('下载失败: ' + (pull.message || ''));
+    }
+  });
+}
+
+async function showSyncDiffDialog(cmp) {
+  const overlay = document.getElementById('delete-confirm-overlay');
+  const parts = [];
+  if (cmp.localOnly.length) parts.push(`本地多 ${cmp.localOnly.length} 条`);
+  if (cmp.remoteOnly.length) parts.push(`云端多 ${cmp.remoteOnly.length} 条`);
+  if (cmp.diffCount) parts.push(`${cmp.diffCount} 条内容不同`);
+
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div class="modal" style="max-width:480px;">
+      <h3>本地与云端不一致</h3>
+      <p style="font-size:12px;color:var(--text-secondary);margin:8px 0;">
+        本地 v${cmp.localVersion} | 云端 v${cmp.remoteVersion} | ${parts.join('，')}
+      </p>
+      ${cmp.localOnly.length ? `<div class="diff-list"><b>仅在本地:</b><br>${cmp.localOnly.map(e => `· ${e.website||'-'} / ${e.account||'-'}`).join('<br>')}</div>` : ''}
+      ${cmp.remoteOnly.length ? `<div class="diff-list"><b>仅在云端:</b><br>${cmp.remoteOnly.map(e => `· ${e.website||'-'} / ${e.account||'-'}`).join('<br>')}</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+        <button class="btn" id="sync-push-local">⬆ 以本地为准，覆盖云端</button>
+        <button class="btn" id="sync-pull-remote">⬇ 以云端为准，覆盖本地</button>
+        <button class="btn btn-primary" id="sync-merge">🔀 合并（两边都保留）</button>
+        <button class="btn btn-small" id="sync-cancel">取消</button>
+      </div>
+    </div>`;
+
+  document.getElementById('sync-cancel').addEventListener('click', () => overlay.style.display = 'none');
+
+  document.getElementById('sync-push-local').addEventListener('click', async () => {
+    overlay.style.display = 'none';
+    const r = await window.api.syncPush();
+    if (r.success) { document.getElementById('sync-status-icon').className = 'sync-status-icon synced'; document.getElementById('sync-status-icon').textContent = '●'; showToast('已上传本地版本'); }
+  });
+
+  document.getElementById('sync-pull-remote').addEventListener('click', async () => {
+    overlay.style.display = 'none';
+    const r = await window.api.syncPull();
+    if (r.success) {
+      showToast('已下载云端版本，重新解锁后生效');
+      setTimeout(async () => { await window.api.lock(); showPage('lock'); initLockScreen(); }, 500);
+    }
+  });
+
+  document.getElementById('sync-merge').addEventListener('click', async () => {
+    overlay.style.display = 'none';
+    const r = await window.api.syncMerge();
+    if (r.success) {
+      mainState = await window.api.getState();
+      state = mainState;
+      const q = document.getElementById('main-search').value;
+      const global = document.getElementById('search-global').checked;
+      renderTable(mainState.vaults, mainState.entries, q, searchFields, global, activeVaultFilter);
+      renderMainSidebar();
+      document.getElementById('sync-status-icon').className = 'sync-status-icon synced';
+      document.getElementById('sync-status-icon').textContent = '●';
+      showToast(`已合并，新增 ${r.added} 条`);
     }
   });
 }

@@ -385,6 +385,124 @@ function setupSyncHandlers() {
       return { hasUpdate: false };
     }
   });
+
+  ipcMain.handle('sync:compare', async () => {
+    try {
+      const cfg = settings.get('syncConfig') || {};
+      if (!cfg.mode || cfg.mode === 'none') return { ok: false, reason: '未配置同步' };
+
+      const vaultPath = settings.get('storagePath');
+      if (!vaultPath || !fs.existsSync(vaultPath)) return { ok: false, reason: '本地无文件' };
+
+      // download remote to temp
+      const os = require('os');
+      const tmpPath = path.join(os.tmpdir(), 'passvault_remote.pvault');
+      try { fs.unlinkSync(tmpPath); } catch (e) {}
+
+      const pullResult = await sync.pullVault(tmpPath);
+      if (!pullResult.success) return { ok: false, reason: '无法下载云端文件: ' + (pullResult.message || '') };
+
+      // try decrypt with current vault's crypto
+      const raw = fs.readFileSync(tmpPath, 'utf8');
+      const nl = raw.indexOf('\n');
+      const hdr = JSON.parse(raw.substring(0, nl));
+      const encrypted = raw.substring(nl + 1);
+
+      if (!vault.crypto || !vault.crypto.isUnlocked) {
+        try { fs.unlinkSync(tmpPath); } catch (e) {}
+        return { ok: false, reason: '密码库未解锁' };
+      }
+
+      let remoteData;
+      try {
+        const payloadJson = vault.crypto.decryptPayload(encrypted, hdr.payloadIv, hdr.payloadAuthTag);
+        remoteData = JSON.parse(payloadJson);
+      } catch (e) {
+        try { fs.unlinkSync(tmpPath); } catch (e) {}
+        return { ok: false, reason: '无法解密云端文件（密钥不匹配，可能是其他设备的密码库）' };
+      }
+
+      // compare entries
+      const localEntries = vault.state.entries || [];
+      const remoteEntries = remoteData.entries || [];
+      const localMap = new Map(localEntries.map(e => [e.website + '|' + (e.alias||'') + '|' + e.account, e]));
+      const remoteMap = new Map(remoteEntries.map(e => [e.website + '|' + (e.alias||'') + '|' + e.account, e]));
+
+      const localOnly = [], remoteOnly = [], bothDiffer = [];
+      localMap.forEach((e, key) => {
+        if (!remoteMap.has(key)) localOnly.push(e);
+        else {
+          const re = remoteMap.get(key);
+          if (e.password !== re.password || e.description !== re.description) bothDiffer.push({ local: e, remote: re });
+        }
+      });
+      remoteMap.forEach((e, key) => { if (!localMap.has(key)) remoteOnly.push(e); });
+
+      const hasDiff = localOnly.length > 0 || remoteOnly.length > 0 || bothDiffer.length > 0;
+      try { fs.unlinkSync(tmpPath); } catch (e) {}
+
+      return {
+        ok: true,
+        hasDiff,
+        localVersion: vault.state.version || 0,
+        remoteVersion: hdr.v || 0,
+        localOnly: localOnly.map(e => ({ website: e.website, alias: e.alias, account: e.account })),
+        remoteOnly: remoteOnly.map(e => ({ website: e.website, alias: e.alias, account: e.account })),
+        diffCount: bothDiffer.length,
+        localTotal: localEntries.length,
+        remoteTotal: remoteEntries.length
+      };
+    } catch (e) {
+      return { ok: false, reason: e.message };
+    }
+  });
+
+  ipcMain.handle('sync:merge', async () => {
+    try {
+      const cfg = settings.get('syncConfig') || {};
+      if (!cfg.mode || cfg.mode === 'none') throw new Error('未配置同步');
+
+      const vaultPath = settings.get('storagePath');
+      if (!vaultPath) throw new Error('无本地文件');
+
+      // download remote
+      const os = require('os');
+      const tmpPath = path.join(os.tmpdir(), 'passvault_remote.pvault');
+      try { fs.unlinkSync(tmpPath); } catch (e) {}
+      const pullResult = await sync.pullVault(tmpPath);
+      if (!pullResult.success) throw new Error('下载失败');
+
+      // decrypt remote
+      const raw = fs.readFileSync(tmpPath, 'utf8');
+      const nl = raw.indexOf('\n');
+      const hdr = JSON.parse(raw.substring(0, nl));
+      const encrypted = raw.substring(nl + 1);
+      const payloadJson = vault.crypto.decryptPayload(encrypted, hdr.payloadIv, hdr.payloadAuthTag);
+      const remoteData = JSON.parse(payloadJson);
+
+      // merge: add remote entries not in local
+      const localEntries = vault.state.entries || [];
+      const localKeys = new Set(localEntries.map(e => e.website + '|' + e.alias + '|' + e.account));
+      let added = 0;
+      for (const re of (remoteData.entries || [])) {
+        const key = re.website + '|' + (re.alias || '') + '|' + re.account;
+        if (!localKeys.has(key)) {
+          const vaultId = (vault.state.vaults[0] || {}).id || 1;
+          const v = vault.state.vaults.find(x => x.id === vaultId);
+          const id = v ? v.nextId++ : Date.now();
+          re.id = id;
+          re.vaultIds = [vaultId];
+          vault.state.entries.push(re);
+          added++;
+        }
+      }
+      vault.save();
+      try { fs.unlinkSync(tmpPath); } catch (e) {}
+      return { success: true, added };
+    } catch (e) {
+      return { success: false, added: 0, error: e.message };
+    }
+  });
 }
 
 module.exports = { registerIpcHandlers };
