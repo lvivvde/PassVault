@@ -33,10 +33,10 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
   const cells = sortableFields.map(f => {
     const clsMap = { id: 'col-id', website: 'col-website', alias: 'col-alias', account: 'col-account', password: 'col-password-hdr', description: 'col-description' };
     const arrow = sortField === f ? (sortAsc ? '▲' : '▼') : '';
-    if (f === 'password') return `<span class="col-password-hdr" data-sort="password">${labels[f]} <small>${arrow}</small></span>`;
+    if (f === 'password') return `<span class="col-password-hdr" data-sort="password">密码 <small>${arrow || '点击显示'}</small></span>`;
     return `<span class="${clsMap[f]}" data-sort="${f}" style="cursor:pointer">${labels[f]} ${arrow}</span>`;
   });
-  headerRow.innerHTML = cells.join('') + '<span class="col-copy-hdr"></span><span class="col-drag"></span>';
+  headerRow.innerHTML = cells.join('') + '<span class="col-copy-hdr"></span><span class="col-copy-hdr"></span><span class="col-copy-hdr"></span><span class="col-drag"></span>';
   container.appendChild(headerRow);
 
   // sort click handlers
@@ -142,23 +142,14 @@ function createTableRow(entry, vaults) {
 
   row.innerHTML = `
     <span class="col-id">${displayId}</span>
-    <span class="col-website">${escapeHtml(ws)}${entry.website.length > 11 ? `<button class="btn-icon copy-inline-btn" data-text="${escapeAttr(entry.website)}" title="${t('table.copyWebsiteHint')}">📋</button>` : ''}</span>
+    <span class="col-website">${escapeHtml(ws)}<button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.website)}" data-no-clear="1" title="复制网址">📋</button></span>
     <span class="col-alias">${escapeHtml(as)}</span>
-    <span class="col-account">${escapeHtml(ac)}${entry.account.length > 11 ? `<button class="btn-icon copy-inline-btn" data-text="${escapeAttr(entry.account)}" title="${t('table.copyAccountHint')}">📋</button>` : ''}</span>
+    <span class="col-account">${escapeHtml(ac)}<button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.account)}" data-no-clear="1" title="复制账号">📋</button></span>
     <span class="col-password" data-pw="${escapeAttr(entry.password)}" title="${t('table.passwordTitle')}">****</span>
     <button class="btn-icon copy-row-btn" data-text="${escapeAttr(entry.password)}" title="${t('table.copyHint')}">📝</button>
     <span class="col-description">${escapeHtml(entry.description || '-')}</span>
     <span class="col-drag" title="${t('table.dragHint')}">≡</span>
   `;
-
-  // inline copy buttons (no auto-clear)
-  row.querySelectorAll('.copy-inline-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.api.copyToClipboard(btn.getAttribute('data-text'), 0);
-      showToast(t('main.copyToast'));
-    });
-  });
 
   row.querySelector('.col-password').addEventListener('click', async () => {
     const revealSec = (await window.api.getSettings()).passwordRevealSeconds || 3;
@@ -173,7 +164,8 @@ function createTableRow(entry, vaults) {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const text = btn.getAttribute('data-text');
-      await window.api.copyToClipboard(text, 1);
+      const noClear = btn.getAttribute('data-no-clear') === '1';
+      await window.api.copyToClipboard(text, noClear ? 0 : 1);
       showToast(t('main.copyToast'));
     });
   });
