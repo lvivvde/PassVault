@@ -29,11 +29,11 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
   const headerRow = document.createElement('div');
   headerRow.className = 'table-row table-header-row';
   const sortableFields = ['id', 'website', 'alias', 'account', 'password', 'description'];
-  const labels = { id: 'ID', website: '网站', alias: '别称', account: '账号', password: '密码 (点击显示)', description: '描述' };
+  const labels = { id: 'ID', website: '网站', alias: '别称', account: '账号', password: '密码', description: '描述' };
   const cells = sortableFields.map(f => {
     const clsMap = { id: 'col-id', website: 'col-website', alias: 'col-alias', account: 'col-account', password: 'col-password-hdr', description: 'col-description' };
     const arrow = sortField === f ? (sortAsc ? '▲' : '▼') : '';
-    if (f === 'password') return `<span class="col-password-hdr" data-sort="password">${labels[f]} <small>${arrow || '(点击显示)'}</small></span>`;
+    if (f === 'password') return `<span class="col-password-hdr" data-sort="password">${labels[f]} <small>点击显示${arrow}</small></span>`;
     return `<span class="${clsMap[f]}" data-sort="${f}" style="cursor:pointer">${labels[f]} ${arrow}</span>`;
   });
   headerRow.innerHTML = cells.join('') + '<span class="col-copy-hdr"></span><span class="col-drag"></span>';

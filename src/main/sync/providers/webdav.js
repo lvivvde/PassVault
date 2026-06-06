@@ -1,9 +1,15 @@
 // WebDAV Sync Provider
 // Implements: test / push / pull / getInfo
-const { createClient } = require('webdav');
+// Uses dynamic import because webdav v5+ is ESM-only
 const fs = require('fs');
 const path = require('path');
 const logger = require('../../logger');
+
+let webdavModule = null;
+async function getWebDAV() {
+  if (!webdavModule) webdavModule = await import('webdav');
+  return webdavModule;
+}
 
 class WebDAVProvider {
   constructor(config) {
@@ -11,8 +17,9 @@ class WebDAVProvider {
     this.client = null;
   }
 
-  getClient() {
+  async getClient() {
     if (!this.client) {
+      const { createClient } = await getWebDAV();
       this.client = createClient(this.config.url, {
         username: this.config.username,
         password: this.config.password
@@ -23,6 +30,7 @@ class WebDAVProvider {
 
   async test() {
     try {
+      const { createClient } = await getWebDAV();
       const cl = createClient(this.config.url, {
         username: this.config.username,
         password: this.config.password
@@ -37,7 +45,7 @@ class WebDAVProvider {
   async push(localPath) {
     if (!fs.existsSync(localPath)) throw new Error('本地文件不存在');
     const data = fs.readFileSync(localPath);
-    const cl = this.getClient();
+    const cl = await this.getClient();
     try { await cl.createDirectory('/passvault'); } catch (e) {}
     await cl.putFileContents('/passvault/vault.pvault', data, { overwrite: true });
     logger.sync('WEBDAV_PUSH', { size: data.length });
@@ -45,7 +53,7 @@ class WebDAVProvider {
   }
 
   async pull(localPath) {
-    const cl = this.getClient();
+    const cl = await this.getClient();
     let exists = false;
     try { await cl.stat('/passvault/vault.pvault'); exists = true; } catch (e) {}
     if (!exists) return { success: false, message: '服务器上未找到密码库' };
@@ -64,7 +72,7 @@ class WebDAVProvider {
 
   async getInfo() {
     try {
-      const cl = this.getClient();
+      const cl = await this.getClient();
       const stat = await cl.stat('/passvault/vault.pvault');
       return { exists: true, size: stat.size, modified: stat.lastmod };
     } catch (e) {
