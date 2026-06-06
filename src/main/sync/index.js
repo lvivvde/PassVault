@@ -85,8 +85,8 @@ async function compare(localMeta, vaultPath, remoteDecrypt) {
 
   // 9. Local > Remote
   if (lv > rv) {
-    // 9.1 Safe upload
-    if (lSync === rv) {
+    // 9.1 First sync (lSync===0) or safe upload
+    if (lSync === 0 || lSync === rv) {
       // 12. 删除检测
       const localCount = localMeta.itemCount || 0;
       const remoteCount = remote.itemCount || 0;

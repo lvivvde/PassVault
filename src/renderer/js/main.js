@@ -378,7 +378,19 @@ async function showEditModal(id = null) {
     if (e.target === overlay) {
       const hasContent = editingId || document.getElementById('edit-website').value || document.getElementById('edit-account').value || document.getElementById('edit-password').value;
       if (!hasContent) { closeEditModal(); return; }
-      if (confirm('有未保存的内容，确定关闭吗？')) closeEditModal();
+      // custom confirm
+      const confirmOverlay = document.getElementById('delete-confirm-overlay');
+      confirmOverlay.style.display = 'flex';
+      confirmOverlay.innerHTML = `
+        <div class="modal modal-small">
+          <h3>未保存的内容</h3><p style="font-size:12px;color:var(--text-secondary);margin:8px 0">有未保存的内容，确定关闭吗？</p>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+            <button class="btn" id="unsaved-cancel">取消</button>
+            <button class="btn btn-danger" id="unsaved-close">关闭</button>
+          </div>
+        </div>`;
+      document.getElementById('unsaved-cancel').addEventListener('click', () => confirmOverlay.style.display = 'none');
+      document.getElementById('unsaved-close').addEventListener('click', () => { confirmOverlay.style.display = 'none'; closeEditModal(); });
     }
   };
 

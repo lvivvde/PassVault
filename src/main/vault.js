@@ -326,6 +326,12 @@ class VaultService {
     this.save();
   }
 
+  reorderEntries(orderMap) {
+    this.data.entries.forEach(e => { if (orderMap[e.id] !== undefined) e.order = orderMap[e.id]; });
+    this.data.entries.sort((a, b) => a.order - b.order);
+    this.save();
+  }
+
   changeMasterPassword(oldPassword, newPassword) {
     if (!this.crypto.unlockWithMasterPassword(oldPassword)) return false;
     const mpSalt = generateSalt();

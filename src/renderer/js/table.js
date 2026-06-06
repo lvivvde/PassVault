@@ -97,6 +97,8 @@ function renderTable(vaults, entries, searchQuery, searchFields, globalSearch, a
 }
 
 function filterEntries(entries, query, fields, global, vaults) {
+  // always filter out hidden entries unless user enables "visible" toggle
+  if (!fields.visible) entries = entries.filter(e => e.visible !== false);
   if (!query) return entries;
   const q = query.toLowerCase();
   const activeFields = [];
