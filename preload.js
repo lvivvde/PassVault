@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('api', {
 
   copyToClipboard: (text, duration) => ipcRenderer.invoke('clipboard:copy', text, duration),
   getAppPath: () => ipcRenderer.invoke('app:get-path'),
+  toggleLog: (enabled) => ipcRenderer.invoke('log:toggle', enabled),
 
   onCloseRequest: (callback) => ipcRenderer.on('app:close-request', callback),
   onSyncStatus: (callback) => ipcRenderer.on('sync:status', (_, status) => callback(status))

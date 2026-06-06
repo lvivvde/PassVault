@@ -9,6 +9,7 @@ const DEFAULTS = {
   loginAttemptLimit: 5,
   passwordRevealSeconds: 3,
   clipboardClearMinutes: 1,
+  logEnabled: false,
   storagePath: '',
   syncMode: 'none',
   webdav: { url: '', username: '', encryptedPassword: '' },

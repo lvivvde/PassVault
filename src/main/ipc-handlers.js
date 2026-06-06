@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const vault = require('./vault');
 const settings = require('./settings');
+const logger = require('./logger');
 const AutoLockTimer = require('./autoLock');
 
 let autoLock = null;
@@ -11,6 +12,10 @@ let getWin = null;
 function registerIpcHandlers(getMainWindow) {
   getWin = getMainWindow;
   autoLock = new AutoLockTimer(getMainWindow);
+
+  logger.setEnabled(settings.get('logEnabled') || false);
+  logger.info('APP', 'IPC handlers registered');
+
   setupLockHandler();
   setupVaultHandlers();
   setupSettingsHandlers();
@@ -251,6 +256,13 @@ function setupClipboardHandler() {
 function setupAppHandlers() {
   ipcMain.handle('app:get-path', async () => {
     return path.join(__dirname, '..', '..');
+  });
+
+  ipcMain.handle('log:toggle', async (_, enabled) => {
+    logger.setEnabled(enabled);
+    settings.set('logEnabled', enabled);
+    logger.info('APP', enabled ? 'Logging enabled' : 'Logging disabled');
+    return { success: true };
   });
 }
 

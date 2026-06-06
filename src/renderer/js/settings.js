@@ -45,6 +45,12 @@ async function initSettingsPage() {
   document.getElementById('setting-change-path').addEventListener('click', showChangePath);
   document.getElementById('clear-trash-btn').addEventListener('click', clearTrash);
   document.getElementById('add-vault-btn').addEventListener('click', showAddVault);
+
+  document.getElementById('setting-log').checked = sett.logEnabled || false;
+  document.getElementById('setting-log').addEventListener('change', async (e) => {
+    await window.api.toggleLog(e.target.checked);
+    showToast(e.target.checked ? 'Logging enabled' : 'Logging disabled');
+  });
   document.getElementById('export-plain-btn').addEventListener('click', exportPlain);
   document.getElementById('export-encrypted-btn').addEventListener('click', exportEncrypted);
   document.getElementById('import-btn').addEventListener('click', importFile);

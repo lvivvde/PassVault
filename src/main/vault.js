@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const { VaultCrypto, deriveKey, generateSalt, hashSha256 } = require('./crypto');
+const logger = require('./logger');
 
 class VaultService {
   constructor() {
@@ -61,6 +62,7 @@ class VaultService {
       require('electron').app.getPath('userData'), 'PassVault', 'vault.pvault'
     );
     this.save();
+    logger.vault('CREATE', { path: this.vaultPath, vaults: this.data.vaults.length });
 
     return { recoveryKey };
   }
@@ -103,23 +105,25 @@ class VaultService {
 
   unlock(filePath, password) {
     this.vaultPath = filePath;
-    const { crypto, encrypted, header } = this.load(filePath);
-    if (!crypto.unlockWithMasterPassword(password)) return false;
-    const payloadJson = crypto.decryptPayload(encrypted, header.payloadIv, header.payloadAuthTag);
+    const { crypto: cv, encrypted, header } = this.load(filePath);
+    if (!cv.unlockWithMasterPassword(password)) return false;
+    const payloadJson = cv.decryptPayload(encrypted, header.payloadIv, header.payloadAuthTag);
     this.data = JSON.parse(payloadJson);
     if (!this.data.trash) this.data.trash = [];
-    this.crypto = crypto;
+    this.crypto = cv;
+    logger.vault('UNLOCK_MP', { entries: this.data.entries.length, vaults: this.data.vaults.length });
     return true;
   }
 
   unlockWithKey(filePath, key) {
     this.vaultPath = filePath;
-    const { crypto, encrypted, header } = this.load(filePath);
-    if (!crypto.unlockWithRecoveryKey(key, crypto.keySalt)) return false;
-    const payloadJson = crypto.decryptPayload(encrypted, header.payloadIv, header.payloadAuthTag);
+    const { crypto: cv, encrypted, header } = this.load(filePath);
+    if (!cv.unlockWithRecoveryKey(key, cv.keySalt)) return false;
+    const payloadJson = cv.decryptPayload(encrypted, header.payloadIv, header.payloadAuthTag);
     this.data = JSON.parse(payloadJson);
     if (!this.data.trash) this.data.trash = [];
-    this.crypto = crypto;
+    this.crypto = cv;
+    logger.vault('UNLOCK_KEY', { entries: this.data.entries.length, vaults: this.data.vaults.length });
     return true;
   }
 
@@ -154,6 +158,7 @@ class VaultService {
     };
     this.data.entries.push(newEntry);
     this.save();
+    logger.vault('ADD_ENTRY', { id, website: entry.website });
     return newEntry;
   }
 
@@ -172,6 +177,7 @@ class VaultService {
       updatedAt: new Date().toISOString()
     };
     this.save();
+    logger.vault('UPDATE_ENTRY', { id: updated.id });
     return this.data.entries[idx];
   }
 
@@ -181,6 +187,7 @@ class VaultService {
     const [deleted] = this.data.entries.splice(idx, 1);
     this.data.trash.push({ entry: deleted, deletedAt: new Date().toISOString() });
     this.save();
+    logger.vault('DELETE_ENTRY', { id, website: deleted.website });
     return true;
   }
 
