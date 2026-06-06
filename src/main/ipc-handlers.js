@@ -194,6 +194,11 @@ function setupVaultHandlers() {
     }
   });
 
+  ipcMain.handle('key:generate-random', async () => {
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex');
+  });
+
   ipcMain.handle('check-storage-path', async (_, filePath) => {
     let exists = false;
     try {

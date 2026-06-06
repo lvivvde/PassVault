@@ -37,12 +37,11 @@ class VaultService {
     const vc = new VaultCrypto();
     vc.setupFromMasterPassword(password);
 
-    let recoveryKey = null;
-    if (keyChoice === 'generate') {
+    let recoveryKey = customKey;
+    if (!recoveryKey) {
       recoveryKey = vc.generateRecoveryKey();
     } else {
-      vc.setCustomRecoveryKey(customKey);
-      recoveryKey = customKey;
+      vc.setCustomRecoveryKey(recoveryKey);
       vc.rekHash = hashSha256(vc.rek);
     }
     this.recoveryKeyDisplay = recoveryKey;

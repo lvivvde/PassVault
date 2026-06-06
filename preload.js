@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld('api', {
   setSetting: (key, value) => ipcRenderer.invoke('settings:set', key, value),
 
   checkStoragePath: (filePath) => ipcRenderer.invoke('check-storage-path', filePath),
+  generateKey: () => ipcRenderer.invoke('key:generate-random'),
   pickFolder: () => ipcRenderer.invoke('dialog:pick-folder'),
   pickFile: (filters) => ipcRenderer.invoke('dialog:pick-file', filters),
   saveFile: (filters) => ipcRenderer.invoke('dialog:save-file', filters),

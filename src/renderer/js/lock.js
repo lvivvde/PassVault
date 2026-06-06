@@ -131,9 +131,26 @@ async function setupStep1Next() {
   setupPassword = pw;
   errorEl.textContent = '';
   switchSetupStep(2);
+
   document.getElementById('setup-saved-check').style.display = 'block';
   document.getElementById('setup-key-display').style.display = 'block';
-  document.getElementById('setup-key-value').textContent = 'Click Next to generate';
+
+  const isCustom = document.querySelector('input[name="keyChoice"]:checked').value === 'custom';
+  if (!isCustom) {
+    recoveryKey = await window.api.generateKey();
+    document.getElementById('setup-key-value').textContent = recoveryKey;
+    setupCopyKeyBtn();
+  } else {
+    document.getElementById('setup-key-value').textContent = '';
+  }
+}
+
+function setupCopyKeyBtn() {
+  const btn = document.getElementById('setup-copy-key');
+  btn.onclick = () => {
+    window.api.copyToClipboard(recoveryKey, 0);
+    showToast('Key copied!');
+  };
 }
 
 async function setupStep2Next() {
@@ -144,11 +161,6 @@ async function setupStep2Next() {
     const customKey = document.getElementById('setup-custom-key').value;
     if (customKey.length < 8) { errorEl.textContent = t('setup.keyTooShort'); return; }
     recoveryKey = customKey;
-  } else {
-    recoveryKey = document.getElementById('setup-key-value').textContent;
-    if (!recoveryKey || recoveryKey.startsWith('Click')) {
-      recoveryKey = await generateAndDisplayKey();
-    }
   }
 
   if (!document.getElementById('setup-key-saved').checked) {
@@ -184,11 +196,10 @@ async function setupFinish() {
   }
 
   const choice = document.querySelector('input[name="keyChoice"]:checked').value === 'custom' ? 'custom' : 'generate';
-  const customKey = choice === 'custom' ? recoveryKey : null;
+  const customKey = recoveryKey;
 
   const result = await window.api.setup(setupPassword, choice, filePath, customKey);
   if (result.success) {
-    if (choice === 'generate') recoveryKey = result.recoveryKey;
     state = result.state;
     showPage('main');
     initMainPage();
