@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.0.1-blue" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue" alt="Platform">
   <img src="https://img.shields.io/badge/electron-31.7.7-brightgreen" alt="Electron">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
@@ -39,7 +39,7 @@ PassVault is a desktop password manager built with Electron, designed for person
 - **Trash Bin** — Deleted entries go to trash, recoverable anytime
 - **Password Generator** — Built-in with customizable character sets, length, prefix/suffix
 - **Clipboard Auto-Clear** — Copied passwords cleared after configurable timeout
-- **Import / Export** — Plain JSON or encrypted .pvault format, with conflict resolution
+- **Import / Export** — Plain JSON, encrypted .pvault, or CSV/TSV from Chrome/Edge with smart dedup
 - **WebDAV Sync** — Sync vault to Nutstore (坚果云) or any WebDAV provider. Credentials encrypted with master password
 - **Customizable** — Dark/Light theme, Chinese/English UI, keyboard shortcuts, per-column widths
 - **No Framework** — Pure HTML/CSS/JS. Zero frontend dependencies
@@ -52,7 +52,7 @@ PassVault is a desktop password manager built with Electron, designed for person
 
 **Option 1: Download** (recommended)
 
-👉 [Download PassVault v1.0.0 Installer](https://github.com/lvivvde/PassVault/releases/tag/v1.0.0)
+👉 [Download PassVault v1.0.1 Installer](https://github.com/lvivvde/PassVault/releases/tag/v1.0.1)
 
 **Option 2: Build from source**
 
@@ -134,7 +134,7 @@ PassVault 是一款基于 Electron 的桌面密码管理器，面向个人用户
 - **回收站** — 删除的条目进回收站，可随时恢复或永久清空
 - **密码生成器** — 内置，支持字符类型/长度/前后缀/排除相似字符等高级选项
 - **剪贴板自动清除** — 复制密码后按设定时间自动清除
-- **导入导出** — 支持明文 JSON 和加密 .pvault 格式，导入冲突逐条弹窗确认
+- **导入导出** — 支持明文 JSON、加密 .pvault、Chrome/Edge 导出 CSV/TSV，智能去重
 - **WebDAV 云同步** — 支持坚果云等 WebDAV 服务，凭证用主密码加密存储
 - **高度可定制** — 深色/浅色主题，中/英文界面，快捷键绑定，列宽记忆
 - **零前端框架** — 纯 HTML/CSS/JS，无任何第三方 UI 依赖
@@ -211,3 +211,18 @@ passvault/
 ### 开源协议
 
 MIT — 详见 [LICENSE](LICENSE)
+
+### 待办 / TODO
+
+| 优先级 | 内容 |
+|--------|------|
+| 高 | 暗色模式适配验收 |
+| 高 | 设置页同步/存储/日志/关于面板卡片化 |
+| 中 | 密码列点击显示明文 UI 改进 |
+| 中 | 表格行双击编辑 |
+| 中 | 拖拽排序视觉反馈优化 |
+| 低 | 托盘右键菜单国际化 |
+| 低 | 快捷键绑定功能 |
+| — | Excel .xlsx 导入支持 |
+| — | macOS/Linux 平台打包 |
+| — | Android APK (CapacitorJS 方案) |
