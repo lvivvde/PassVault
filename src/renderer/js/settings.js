@@ -60,9 +60,13 @@ const panels = {
 
   data: `
     <h3>数据管理</h3>
-    <button class="btn btn-small" id="export-plain-btn">导出明文</button>
-    <button class="btn btn-small" id="export-encrypted-btn">导出加密</button>
-    <button class="btn btn-small" id="import-btn">导入密码库</button>`,
+    <p class="section-desc">导出、导入和管理密码库数据</p>
+    <div class="settings-section">
+      <div class="setting-row"><label>导出密码</label><button class="btn" id="export-plain-btn">导出明文</button></div>
+      <div class="setting-row"><label>加密备份</label><button class="btn" id="export-encrypted-btn">导出加密</button></div>
+      <div class="setting-row"><label>导入密码库</label><button class="btn" id="import-btn">导入密码库</button></div>
+      <div class="setting-row"><label>导入 CSV</label><button class="btn" id="import-csv-btn">选择CSV/TSV文件</button></div>
+    </div>`,
 
   storage: `
     <h3>存储</h3>
@@ -257,6 +261,7 @@ async function bindPanelEvents(cat) {
     document.getElementById('export-plain-btn').addEventListener('click', exportPlain);
     document.getElementById('export-encrypted-btn').addEventListener('click', exportEncrypted);
     document.getElementById('import-btn').addEventListener('click', importFile);
+    document.getElementById('import-csv-btn').addEventListener('click', startCsvImport);
   }
 
   if (cat === 'storage') {
@@ -639,4 +644,94 @@ async function finalizeImport(entries) {
 function escHtml(s) {
   if (!s) return '';
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── CSV Import ──
+
+const TARGET_FIELDS = [
+  { value: '', label: '忽略' },
+  { value: 'website', label: '网站 (website)' },
+  { value: 'alias', label: '别称 (alias)' },
+  { value: 'account', label: '账号 (account)' },
+  { value: 'password', label: '密码 (password)' },
+  { value: 'description', label: '描述 (description)' }
+];
+
+async function startCsvImport() {
+  const filePath = await window.api.pickFile([{ name: 'CSV/TSV/TXT', extensions: ['csv', 'tsv', 'txt'] }]);
+  if (!filePath) return;
+
+  const result = await window.api.parseImportFile(filePath);
+  if (result.error) { showToast(t('main.csvParseError') + ': ' + result.error); return; }
+  if (!result.ok) return;
+
+  showCsvMappingDialog(filePath, result);
+}
+
+async function showCsvMappingDialog(filePath, parsed) {
+  const overlay = document.getElementById('csv-import-overlay') || createImportDialogOverlay();
+  overlay.style.display = 'flex';
+
+  const mappingRows = parsed.mapping.map(m => {
+    const opts = TARGET_FIELDS.map(f =>
+      `<option value="${f.value}" ${f.value === m.target ? 'selected' : ''}>${f.label}</option>`
+    ).join('');
+    return `<div class="csv-mapping-row">
+      <span class="csv-source-col">${escHtml(m.source)}</span>
+      <span class="csv-arrow">→</span>
+      <select class="csv-target-sel" data-source="${escHtml(m.source)}">${opts}</select>
+    </div>`;
+  }).join('');
+
+  const previewRows = parsed.preview.map(row => {
+    const cells = parsed.headers.map(h => `<td>${escHtml(row[h] || '-')}</td>`).join('');
+    return `<tr>${cells}</tr>`;
+  }).join('');
+
+  const state = await window.api.getState();
+  const vaultOpts = (state.vaults || []).map(v => `<option value="${v.id}">${escHtml(v.name)}</option>`).join('');
+
+  overlay.innerHTML = `
+    <div class="modal modal-wide">
+      <h3>${t('main.csvImport')} — ${t('main.csvMappingTitle')}</h3>
+      <div class="csv-mapping">${mappingRows}</div>
+      <h4 style="margin-top:12px;">数据预览（前 ${Math.min(parsed.totalRows, 5)} 条，共 ${parsed.totalRows} 条）</h4>
+      <div class="csv-preview-wrap">
+        <table class="csv-preview"><thead><tr>${parsed.headers.map(h => `<th>${escHtml(h)}</th>`).join('')}</tr></thead><tbody>${previewRows}</tbody></table>
+      </div>
+      <div class="setting-row" style="margin-top:8px;">
+        <label>目标密码库</label>
+        <select id="csv-target-vault">${vaultOpts}</select>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn" id="csv-cancel-btn">取消</button>
+        <button class="btn btn-primary" id="csv-start-btn">开始导入</button>
+      </div>
+    </div>`;
+
+  document.getElementById('csv-cancel-btn').addEventListener('click', () => overlay.style.display = 'none');
+  document.getElementById('csv-start-btn').addEventListener('click', async () => {
+    const mapping = [];
+    overlay.querySelectorAll('.csv-target-sel').forEach(sel => {
+      mapping.push({ source: sel.dataset.source, target: sel.value });
+    });
+    const targetVaultId = parseInt(document.getElementById('csv-target-vault').value) || 1;
+    overlay.style.display = 'none';
+    showToast(t('main.csvImporting'));
+    const r = await window.api.executeImport(filePath, mapping, targetVaultId);
+    if (r.error) { showToast(t('main.importFail') + ': ' + r.error); return; }
+    try { await window.api.reloadState(); } catch (e) {}
+    let msg = t('main.csvResult').replace('{n}', r.imported);
+    if (r.duplicates > 0) msg += '，' + t('main.csvDuplicates').replace('{n}', r.duplicates);
+    if (r.skipped > 0) msg += '，' + t('main.csvSkipped').replace('{n}', r.skipped);
+    showToast(msg);
+  });
+}
+
+function createImportDialogOverlay() {
+  const overlay = document.createElement('div');
+  overlay.id = 'csv-import-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.25);display:none;justify-content:center;align-items:center;z-index:1000;';
+  document.body.appendChild(overlay);
+  return overlay;
 }

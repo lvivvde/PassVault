@@ -31,6 +31,9 @@ contextBridge.exposeInMainWorld('api', {
   importFinalize: (entries, conflictsResolved) => ipcRenderer.invoke('vault:import-finalize', entries, conflictsResolved),
   importResolveConflict: (resolution) => ipcRenderer.invoke('vault:import-resolve', resolution),
 
+  parseImportFile: (filePath) => ipcRenderer.invoke('import:parse-file', filePath),
+  executeImport: (filePath, mapping, targetVaultId) => ipcRenderer.invoke('import:execute', filePath, mapping, targetVaultId),
+
   changeMasterPassword: (oldPw, newPw) => ipcRenderer.invoke('vault:change-master', oldPw, newPw),
   regenerateKey: (password) => ipcRenderer.invoke('vault:regenerate-key', password),
 

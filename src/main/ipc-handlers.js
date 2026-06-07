@@ -24,6 +24,7 @@ function registerIpcHandlers(getMainWindow) {
   setupClipboardHandler();
   setupAppHandlers();
   setupSyncHandlers();
+  setupImportHandlers();
   setupI18nHandlers();
 }
 
@@ -350,6 +351,135 @@ function setupI18nHandlers() {
       }
       return { success: true, dict: flat };
     } catch (e) { return { success: false }; }
+  });
+}
+
+function setupImportHandlers() {
+  // CSV column name matching rules
+  const FIELD_MATCH = {
+    website: ['url', 'website', '网址', 'site'],
+    alias: ['name', 'title', '名称', '别名', 'alias', '别称'],
+    account: ['username', 'user', 'email', 'login', '账号', '用户名'],
+    password: ['password', 'pass', '密码', 'pwd'],
+    description: ['note', 'notes', 'description', '备注', 'desc']
+  };
+
+  function detectDelimiter(firstRows) {
+    const candidates = [',', '\t', '|', ';'];
+    let best = { d: ',', n: 0 };
+    candidates.forEach(d => {
+      const count = firstRows.reduce((s, r) => s + (r.match(new RegExp(`\\${d}`, 'g')) || []).length, 0);
+      if (count > best.n) best = { d, n: count };
+    });
+    return best.n > 0 ? best.d : ',';
+  }
+
+  function splitRow(line, delim) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === delim && !inQuotes) { result.push(current.trim()); current = ''; continue; }
+      current += ch;
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  function matchField(colName) {
+    const key = colName.toLowerCase().replace(/[\s_-]/g, '');
+    for (const [field, keywords] of Object.entries(FIELD_MATCH)) {
+      if (keywords.some(kw => kw.toLowerCase().replace(/[\s_-]/g, '') === key)) return field;
+    }
+    return null;
+  }
+
+  ipcMain.handle('import:parse-file', async (_, filePath) => {
+    try {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      // strip BOM
+      const content = raw.charCodeAt(0) === 0xFEFF ? raw.slice(1) : raw;
+      const lines = content.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return { error: '文件为空或只有表头' };
+
+      const delim = detectDelimiter(lines.slice(0, 3));
+      const headers = splitRow(lines[0], delim).map(h => h.replace(/^"|"$/g, ''));
+      const mapping = headers.map(h => ({ source: h, target: matchField(h) || '' }));
+
+      const preview = [];
+      const maxPreview = Math.min(lines.length - 1, 5);
+      for (let i = 1; i <= maxPreview; i++) {
+        const cells = splitRow(lines[i], delim);
+        const row = {};
+        headers.forEach((h, idx) => { row[h] = (cells[idx] || '').replace(/^"|"$/g, ''); });
+        preview.push(row);
+      }
+
+      return { ok: true, headers, mapping, preview, totalRows: lines.length - 1, delim };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
+  ipcMain.handle('import:execute', async (_, filePath, mapping, targetVaultId) => {
+    try {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const content = raw.charCodeAt(0) === 0xFEFF ? raw.slice(1) : raw;
+      const lines = content.split(/\r?\n/).filter(l => l.trim());
+      const delim = detectDelimiter(lines.slice(0, 3));
+      const headers = splitRow(lines[0], delim).map(h => h.replace(/^"|"$/g, ''));
+
+      // build field index map
+      const fieldMap = {};
+      mapping.forEach(m => { if (m.target) fieldMap[m.target] = headers.indexOf(m.source); });
+      if (!fieldMap.password) return { error: '未映射密码列' };
+
+      let imported = 0;
+      let skipped = 0;
+      let duplicates = 0;
+      const vault = require('./vault');
+
+      // build dedup index from existing entries in target vault
+      const existing = (vault.data && vault.data.entries || []).filter(e =>
+        e.vaultIds && e.vaultIds.includes(targetVaultId || 1)
+      );
+      const existingKeys = new Set();
+      existing.forEach(e => {
+        const w = (e.website || '').toLowerCase().trim();
+        const a = (e.account || '').toLowerCase().trim();
+        const p = (e.password || '');
+        existingKeys.add(w + '||' + a + '||' + p);
+      });
+
+      for (let i = 1; i < lines.length; i++) {
+        const cells = splitRow(lines[i], delim);
+        const password = (cells[fieldMap.password] || '').replace(/^"|"$/g, '');
+        if (!password) { skipped++; continue; }
+
+        const website = (cells[fieldMap.website] || '').replace(/^"|"$/g, '') || (cells[fieldMap.alias] || '').replace(/^"|"$/g, '');
+        const account = (cells[fieldMap.account] || '').replace(/^"|"$/g, '');
+        const key = website.toLowerCase().trim() + '||' + account.toLowerCase().trim() + '||' + password;
+        if (existingKeys.has(key)) { duplicates++; continue; }
+
+        const entry = {
+          website,
+          alias: (cells[fieldMap.alias] || '').replace(/^"|"$/g, ''),
+          account,
+          password,
+          description: (cells[fieldMap.description] || '').replace(/^"|"$/g, ''),
+          vaultIds: [targetVaultId || 1],
+          visible: true
+        };
+        vault.addEntry(entry);
+        existingKeys.add(key);
+        imported++;
+      }
+      return { success: true, imported, skipped, duplicates };
+    } catch (e) {
+      return { error: e.message };
+    }
   });
 }
 

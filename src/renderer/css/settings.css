@@ -181,5 +181,35 @@
 /* ── Key hint ── */
 .key-hint { font-family: monospace; color: var(--accent); font-size: 13px; }
 
+/* ── CSV Import dialog ── */
+#csv-import-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.25);
+  display: none; justify-content: center; align-items: center; z-index: 1000;
+}
+.csv-mapping { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.csv-mapping-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--border-light);
+}
+.csv-source-col { width: 120px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csv-arrow { color: var(--text-muted); font-size: 12px; }
+.csv-target-sel {
+  height: 30px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg-raised); color: var(--text-primary); font-size: 12px; outline: none;
+}
+.csv-target-sel:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+.csv-preview-wrap { overflow-x: auto; margin-top: 8px; }
+.csv-preview { width: 100%; border-collapse: collapse; font-size: 12px; }
+.csv-preview th {
+  background: var(--bg-raised); color: var(--text-secondary);
+  padding: 6px 10px; text-align: left; font-weight: 600;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.csv-preview td {
+  padding: 5px 10px; border-bottom: 1px solid var(--border-light);
+  max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.modal-wide { max-width: 680px; width: 90%; }
+
 /* ── Sync panel (keep existing, don't touch) ── */
 /* sync/folder/data/storage/log/about — styled by default .setting-row rules above */
